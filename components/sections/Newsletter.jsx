@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Button from '@/components/ui/Button'
 
 export default function Newsletter() {
-  const [email,  setEmail]  = useState('')
+  const [email, setEmail] = useState('')
   const [status, setStatus] = useState('idle') // idle | success | error
 
   function handleSubmit(e) {
@@ -41,7 +41,7 @@ export default function Newsletter() {
               aria-label="Adresse e-mail"
             />
             <Button type="submit" size="md" className="rounded-none flex-shrink-0">
-              S'inscrire
+              S&apos;inscrire
             </Button>
           </div>
 

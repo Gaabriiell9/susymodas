@@ -19,7 +19,7 @@ export default function ProductGrid() {
       <div className="mx-auto max-w-7xl px-4 sm:px-10">
         <SectionHeader
           label="Nos Créations"
-          title='Robes <em class="text-gold" style="font-style:italic">Choisies avec Soin</em>'
+          title='Robes &lt;em class=&quot;text-gold&quot; style=&quot;font-style:italic&quot;&gt;Choisies avec Soin&lt;/em&gt;'
           className="mb-8 sm:mb-12"
         />
 
@@ -39,7 +39,7 @@ export default function ProductGrid() {
         {/* État vide */}
         {visible.length === 0 && (
           <p className="text-center font-serif italic text-taupe text-lg mt-16">
-            Aucun modèle dans cette catégorie pour l'instant.
+            Aucun modèle dans cette catégorie pour l&apos;instant.
           </p>
         )}
 

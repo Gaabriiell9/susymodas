@@ -3,14 +3,14 @@ import Stars from '@/components/ui/Stars'
 
 const TESTIMONIALS = [
   {
-    text: "J'ai commandé ma robe de mariage ici et c'était parfait. Susy a su exactement ce que je voulais — modeste, élégante et qui valorise ma silhouette. Je me suis sentie vraiment belle devant Dieu.",
+    text: "J&apos;ai commandé ma robe de mariage ici et c&apos;était parfait. Susy a su exactement ce que je voulais — modeste, élégante et qui valorise ma silhouette. Je me suis sentie vraiment belle devant Dieu.",
     name: 'Marie-Christelle B.',
     location: 'Kourou, Guyane',
     avatar: '👰',
     rating: 5,
   },
   {
-    text: "Enfin une boutique qui comprend nos valeurs ! Les robes sont magnifiques, les tissus de qualité et le service tellement chaleureux. Je recommande à toutes mes sœurs de l'Église.",
+    text: "Enfin une boutique qui comprend nos valeurs ! Les robes sont magnifiques, les tissus de qualité et le service tellement chaleureux. Je recommande à toutes mes sœurs de l&apos;Église.",
     name: 'Joëlle M.',
     location: 'Cayenne, Guyane',
     avatar: '🙏',
@@ -31,7 +31,7 @@ export default function Testimonials() {
       <div className="mx-auto max-w-7xl px-4 sm:px-10">
         <SectionHeader
           label="Témoignages"
-          title='Elles ont <em class="text-gold" style="font-style:italic">Choisi Susy Modas</em>'
+          title='Elles ont &lt;em class=&quot;text-gold&quot; style=&quot;font-style:italic&quot;&gt;Choisi Susy Modas&lt;/em&gt;'
           className="mb-16"
         />
 
@@ -40,7 +40,7 @@ export default function Testimonials() {
             <div key={t.name} className="relative bg-white border border-gold-light rounded-2xl p-8">
               {/* Guillemet décoratif */}
               <span className="absolute top-2 left-6 font-serif text-6xl text-gold-light leading-none select-none">
-                "
+                &quot;
               </span>
 
               <p className="font-serif italic text-brown-light leading-relaxed mt-6 mb-6">
