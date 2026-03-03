@@ -8,7 +8,6 @@ import { ShoppingBag, Search, Menu, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const NAV_LINKS = [
-  { label: 'Collections',    href: '#collections' },
   { label: 'Nouveautés',     href: '#nouveautes' },
   { label: 'Occasions',      href: '#occasions' },
   { label: 'Notre Boutique', href: '#valeurs' },
