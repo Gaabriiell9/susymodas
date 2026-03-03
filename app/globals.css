@@ -2,26 +2,41 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* ── Scrollbar ───────────────────────────────────────── */
+::-webkit-scrollbar        { width: 5px; }
+::-webkit-scrollbar-track  { background: #FAF7F2; }
+::-webkit-scrollbar-thumb  { background: #C9A96E; border-radius: 4px; }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* ── Smooth scroll ───────────────────────────────────── */
+html { scroll-behavior: smooth; }
+
+/* ── Selection ───────────────────────────────────────── */
+::selection { background: #E8D5B0; color: #2C2118; }
+
+/* ── Base ────────────────────────────────────────────── */
+@layer base {
+  body {
+    @apply bg-cream text-brown-dark font-sans antialiased;
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-}
+/* ── Composants réutilisables ────────────────────────── */
+@layer components {
+  .section-label {
+    @apply text-gold text-xs tracking-[0.25em] uppercase font-medium font-sans;
+  }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
+  .section-title {
+    @apply font-serif text-brown font-light leading-tight;
+    font-size: clamp(2rem, 3.5vw, 3rem);
+  }
+
+  .divider-ornament {
+    @apply flex items-center justify-center gap-3 mt-4;
+  }
+  .divider-ornament::before,
+  .divider-ornament::after {
+    content: '';
+    @apply h-px w-14 bg-gold-light;
   }
 }
