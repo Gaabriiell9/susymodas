@@ -1,0 +1,91 @@
+// prisma/schema.prisma
+// Lance : npx prisma generate && npx prisma db push
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Produit ──────────────────────────────────────────────────────────────────
+model Product {
+  id            Int          @id @default(autoincrement())
+  slug          String       @unique
+  name          String
+  description   String?
+  price         Float
+  originalPrice Float?
+  category      String       // eglise | ceremonie | quotidien | enfant
+  tags          String[]     // ["nouveau", "exclusif", "promo"]
+  images        String[]     // URLs des photos
+  sizes         String[]
+  colors        String[]
+  stock         Int          @default(0)
+  active        Boolean      @default(true)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  orderItems    OrderItem[]
+}
+
+// ─── Commande ─────────────────────────────────────────────────────────────────
+model Order {
+  id          Int         @id @default(autoincrement())
+  reference   String      @unique   // ex: SME-2025-0042
+  status      OrderStatus @default(PENDING)
+  totalAmount Float
+  // Infos client
+  firstName   String
+  lastName    String
+  email       String
+  phone       String
+  address     String?
+  city        String?
+  notes       String?
+  // Paiement
+  paymentMethod  PaymentMethod @default(WHATSAPP)
+  stripeSessionId String?
+  paidAt         DateTime?
+  // Relations
+  items       OrderItem[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model OrderItem {
+  id        Int     @id @default(autoincrement())
+  orderId   Int
+  productId Int
+  quantity  Int
+  price     Float   // prix au moment de la commande
+  size      String?
+  color     String?
+  order     Order   @relation(fields: [orderId], references: [id])
+  product   Product @relation(fields: [productId], references: [id])
+}
+
+// ─── Admin ────────────────────────────────────────────────────────────────────
+model Admin {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String   // bcrypt hash
+  name      String
+  createdAt DateTime @default(now())
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+enum OrderStatus {
+  PENDING    // En attente
+  CONFIRMED  // Confirmée
+  SHIPPED    // Expédiée
+  DELIVERED  // Livrée
+  CANCELLED  // Annulée
+}
+
+enum PaymentMethod {
+  WHATSAPP   // Paiement à la livraison / WA
+  STRIPE     // Carte bancaire
+  PAYPAL
+}
