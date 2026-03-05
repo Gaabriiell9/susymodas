@@ -42,6 +42,9 @@ export async function PUT(request, { params }) {
 export async function DELETE(request, { params }) {
   try {
     const id = parseInt(params.id)
+    // Supprime d'abord les OrderItems liés (contrainte FK)
+    await prisma.orderItem.deleteMany({ where: { productId: id } })
+    // Puis supprime le produit
     await prisma.product.delete({ where: { id } })
     return NextResponse.json({ success: true })
   } catch (error) {
