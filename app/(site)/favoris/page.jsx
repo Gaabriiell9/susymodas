@@ -3,7 +3,7 @@
 import { useWishlist } from '@/context/WishlistContext'
 import ProductCard from '@/components/product/ProductCard'
 import Link from 'next/link'
-import { Heart } from 'lucide-react'
+import { Heart, ChevronLeft } from 'lucide-react'
 
 export default function FavorisPage() {
     const { items } = useWishlist()
@@ -11,6 +11,13 @@ export default function FavorisPage() {
     return (
         <div className="min-h-screen bg-cream py-12 px-4 sm:px-10">
             <div className="mx-auto max-w-7xl">
+
+                {/* Retour boutique */}
+                <Link href="/" className="inline-flex items-center gap-1.5 text-brown-light hover:text-gold transition-colors font-sans text-sm mb-8">
+                    <ChevronLeft size={16} strokeWidth={1.5} />
+                    Retour à la boutique
+                </Link>
+
                 <div className="mb-10 text-center">
                     <p className="font-sans text-xs tracking-widest uppercase text-gold mb-2">Ma liste</p>
                     <h1 className="font-serif text-3xl sm:text-4xl text-brown">Mes Favoris</h1>
