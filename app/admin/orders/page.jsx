@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { formatPrice } from '@/lib/utils'
 
-export const dynamic = 'force-dynamic'
 const STATUSES = {
   PENDING: { label: 'En attente', color: 'bg-amber-100 text-amber-700', next: 'CONFIRMED' },
   CONFIRMED: { label: 'Confirmée', color: 'bg-blue-100 text-blue-700', next: 'SHIPPED' },
@@ -18,6 +17,7 @@ export default function AdminOrders() {
   const [filter, setFilter] = useState('all')
   const [selected, setSelected] = useState(null)
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { fetchOrders() }, [filter])
 
   async function fetchOrders() {

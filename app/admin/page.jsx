@@ -19,7 +19,6 @@ async function getStats() {
       _sum: { totalAmount: true },
     }),
   ])
-
   return { totalOrders, pendingOrders, totalProducts, recentOrders, revenue: revenue._sum.totalAmount ?? 0 }
 }
 
@@ -38,7 +37,7 @@ export default async function AdminDashboard() {
     { label: 'Commandes totales', value: stats.totalOrders, icon: ShoppingBag, color: 'text-gold' },
     { label: 'En attente', value: stats.pendingOrders, icon: Clock, color: 'text-amber-500' },
     { label: 'Produits actifs', value: stats.totalProducts, icon: Package, color: 'text-blue-500' },
-    { label: 'Chiffre d\'affaires', value: formatPrice(stats.revenue), icon: TrendingUp, color: 'text-green-600' },
+    { label: "Chiffre d'affaires", value: formatPrice(stats.revenue), icon: TrendingUp, color: 'text-green-600' },
   ]
 
   return (
@@ -65,7 +64,9 @@ export default async function AdminDashboard() {
         </div>
 
         {stats.recentOrders.length === 0 ? (
-          <p className="p-8 text-center font-sans text-sm text-gray-400 italic">Aucune commande pour l'instant.</p>
+          <p className="p-8 text-center font-sans text-sm text-gray-400 italic">
+            Aucune commande pour l&apos;instant.
+          </p>
         ) : (
           <table className="w-full">
             <thead className="bg-gray-50 text-left">
