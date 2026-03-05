@@ -44,11 +44,19 @@ export default function ProductCard({ product }) {
       )}>
 
         {/* Zone image */}
-        <div className="relative flex items-center justify-center overflow-hidden aspect-[4/3] sm:aspect-[3/4]">
+        <div className="relative overflow-hidden aspect-[3/4]">
           {hasImage ? (
-            <Image src={product.images[0]} alt={product.name} fill className={cn('object-cover', isSold && 'grayscale')} sizes="(max-width: 768px) 50vw, 25vw" />
+            <Image
+              src={product.images[0]}
+              alt={product.name}
+              fill
+              className={cn('object-cover object-top', isSold && 'grayscale opacity-60')}
+              sizes="(max-width: 768px) 50vw, 25vw"
+            />
           ) : (
-            <span className="text-5xl sm:text-6xl opacity-40 select-none" aria-hidden>👗</span>
+            <div className="w-full h-full flex items-center justify-center">
+              <span className="text-5xl sm:text-6xl opacity-40 select-none" aria-hidden>👗</span>
+            </div>
           )}
 
           {/* Badge VENDU */}
@@ -65,7 +73,7 @@ export default function ProductCard({ product }) {
           {/* Coeur favoris */}
           <button
             onClick={handleWish}
-            className="absolute top-2.5 right-2.5 w-8 h-8 rounded-full bg-white/90 shadow flex items-center justify-center sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-200"
+            className="absolute top-2.5 right-2.5 w-8 h-8 rounded-full bg-white/90 shadow flex items-center justify-center sm:opacity-0 sm:group-hover:opacity-100 opacity-100 transition-all duration-200"
             aria-label={wished ? 'Retirer des favoris' : 'Ajouter aux favoris'}
           >
             <Heart size={14} className={wished ? 'fill-rose-deep text-rose-deep' : 'text-brown-light'} />
@@ -75,7 +83,8 @@ export default function ProductCard({ product }) {
           {!isSold && (
             <div className="absolute inset-x-0 bottom-0 hidden sm:block translate-y-full group-hover:translate-y-0 transition-transform duration-300 p-2.5">
               <button onClick={handleAdd}
-                className={cn('w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-white font-sans text-[0.68rem] tracking-[0.08em] uppercase font-medium transition-colors duration-200',
+                className={cn(
+                  'w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-white font-sans text-[0.68rem] tracking-[0.08em] uppercase font-medium transition-colors duration-200',
                   added ? 'bg-green-600' : 'bg-gold hover:bg-rose-deep'
                 )}>
                 <ShoppingBag size={13} />
@@ -87,7 +96,7 @@ export default function ProductCard({ product }) {
 
         {/* Infos */}
         <div className="p-3 sm:p-4">
-          <p className="font-sans text-[0.6rem] tracking-[0.1em] uppercase text-taupe mb-0.5">{product.category}</p>
+          <p className="font-sans text-[0.6rem] tracking-[0.1em] uppercase text-taupe mb-0.5">{product.sizes?.[0] ?? product.category}</p>
           <h3 className={cn('font-serif text-sm sm:text-base leading-snug', isSold ? 'text-gray-400' : 'text-brown')}>{product.name}</h3>
 
           <div className="flex items-center justify-between mt-1.5 sm:mt-2">
@@ -95,7 +104,9 @@ export default function ProductCard({ product }) {
               <span className={cn('font-serif text-base sm:text-lg font-semibold', isSold ? 'text-gray-400 line-through' : 'text-brown')}>
                 {formatPrice(product.price)}
               </span>
-              {product.originalPrice && !isSold && <span className="font-sans text-[0.7rem] text-taupe line-through">{formatPrice(product.originalPrice)}</span>}
+              {product.originalPrice && !isSold && (
+                <span className="font-sans text-[0.7rem] text-taupe line-through">{formatPrice(product.originalPrice)}</span>
+              )}
             </div>
             {!isSold && <Stars rating={5} />}
           </div>
@@ -107,14 +118,15 @@ export default function ProductCard({ product }) {
             </div>
           ) : (
             <button onClick={handleAdd}
-              className={cn('sm:hidden mt-2.5 w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-white font-sans text-[0.68rem] tracking-[0.06em] uppercase font-medium transition-colors duration-200',
+              className={cn(
+                'sm:hidden mt-2.5 w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-white font-sans text-[0.68rem] tracking-[0.06em] uppercase font-medium transition-colors duration-200',
                 added ? 'bg-green-600' : 'bg-gold'
               )}>
               <ShoppingBag size={12} />
               {added ? '✓ Ajouté !' : 'Panier'}
             </button>
           )}
-        </div>-
+        </div>
       </article>
     </Link>
   )
