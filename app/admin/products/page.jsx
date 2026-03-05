@@ -12,7 +12,17 @@ const ALL_SIZES = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL']
 
 const emptyForm = {
   name: '', description: '', price: '', originalPrice: '',
-  sizes: [], colors: [], tags: [], stock: 1, active: true, images: [],
+  sizeStock: {}, // { S: 2, M: 1, XL: 3 }
+  colors: [], tags: [], active: true, images: [],
+}
+
+function parseSizeStock(product) {
+  // Reconstruit sizeStock depuis sizes[] et stock total
+  const obj = {}
+  if (product.sizes?.length) {
+    product.sizes.forEach(s => { obj[s] = 1 })
+  }
+  return obj
 }
 
 export default function AdminProducts() {
@@ -47,10 +57,9 @@ export default function AdminProducts() {
       description: product.description ?? '',
       price: product.price,
       originalPrice: product.originalPrice ?? '',
-      sizes: product.sizes ?? [],
+      sizeStock: parseSizeStock(product),
       colors: product.colors ?? [],
       tags: product.tags ?? [],
-      stock: product.stock ?? 1,
       active: product.active,
       images: product.images ?? [],
     })
@@ -59,8 +68,17 @@ export default function AdminProducts() {
   }
 
   function toggleSize(s) {
-    const already = form.sizes.includes(s)
-    setForm({ ...form, sizes: already ? form.sizes.filter(x => x !== s) : [...form.sizes, s] })
+    const current = { ...form.sizeStock }
+    if (current[s] !== undefined) {
+      delete current[s]
+    } else {
+      current[s] = 1
+    }
+    setForm({ ...form, sizeStock: current })
+  }
+
+  function setStock(s, val) {
+    setForm({ ...form, sizeStock: { ...form.sizeStock, [s]: Math.max(0, parseInt(val) || 0) } })
   }
 
   async function handleImageUpload(e) {
@@ -87,12 +105,20 @@ export default function AdminProducts() {
 
   async function handleSave() {
     setSaving(true)
+    const sizes = Object.keys(form.sizeStock)
+    const stock = Object.values(form.sizeStock).reduce((a, b) => a + b, 0)
+
     const url = modal === 'edit' ? `/api/products/${selected.id}` : '/api/products'
     const method = modal === 'edit' ? 'PUT' : 'POST'
     await fetch(url, {
       method,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...form, category: form.sizes?.[0] ?? 'unique' }),
+      body: JSON.stringify({
+        ...form,
+        sizes,
+        stock,
+        category: sizes[0] ?? 'unique',
+      }),
     })
     setModal(false)
     setSaving(false)
@@ -114,6 +140,8 @@ export default function AdminProducts() {
   }
 
   const inputClass = "w-full border border-gray-200 rounded-lg px-3 py-2 font-sans text-sm text-brown outline-none focus:border-gold transition-colors"
+  const selectedSizes = Object.keys(form.sizeStock)
+  const totalStock = Object.values(form.sizeStock).reduce((a, b) => a + b, 0)
 
   return (
     <div>
@@ -131,7 +159,7 @@ export default function AdminProducts() {
           <table className="w-full">
             <thead className="bg-gray-50 text-left">
               <tr>
-                {['Photo', 'Nom', 'Tailles', 'Prix', 'Stock', 'Statut', 'Actions'].map((h) => (
+                {['Photo', 'Nom', 'Tailles & Stock', 'Prix', 'Statut', 'Actions'].map((h) => (
                   <th key={h} className="px-4 py-3 font-sans text-xs uppercase tracking-wider text-gray-500">{h}</th>
                 ))}
               </tr>
@@ -155,14 +183,12 @@ export default function AdminProducts() {
                       {p.sizes?.length > 0 ? p.sizes.map(s => (
                         <span key={s} className="inline-flex items-center justify-center px-2 h-6 bg-beige rounded font-sans text-xs font-semibold text-brown">{s}</span>
                       )) : <span className="text-gray-400 text-xs">—</span>}
+                      <span className="text-[0.65rem] text-gray-400 ml-1 self-center">({p.stock} unité{p.stock > 1 ? 's' : ''})</span>
                     </div>
                   </td>
                   <td className="px-4 py-3">
                     <span className="font-sans text-sm font-medium">{formatPrice(p.price)}</span>
                     {p.originalPrice && <span className="text-xs text-gray-400 line-through ml-1">{formatPrice(p.originalPrice)}</span>}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={`font-sans text-sm ${p.stock <= 1 ? 'text-red-500 font-medium' : 'text-gray-600'}`}>{p.stock}</span>
                   </td>
                   <td className="px-4 py-3">
                     <span className={`px-2.5 py-1 rounded-full text-xs font-sans ${p.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
@@ -241,26 +267,44 @@ export default function AdminProducts() {
                 </div>
               </div>
 
-              {/* Tailles — multi-sélection */}
+              {/* Tailles + stock par taille */}
               <div>
                 <label className="block font-sans text-xs uppercase tracking-wider text-taupe mb-2">
-                  Tailles disponibles {form.sizes.length > 0 && <span className="text-gold">({form.sizes.join(', ')})</span>}
+                  Tailles & unités
+                  {totalStock > 0 && <span className="text-gold ml-2">— {totalStock} unité{totalStock > 1 ? 's' : ''} au total</span>}
                 </label>
-                <div className="flex flex-wrap gap-2">
+
+                {/* Boutons tailles */}
+                <div className="flex flex-wrap gap-2 mb-3">
                   {ALL_SIZES.map((s) => (
                     <button key={s} type="button" onClick={() => toggleSize(s)}
-                      className={`w-12 h-10 rounded-lg border font-sans text-xs font-medium transition-all ${form.sizes.includes(s) ? 'border-gold bg-gold text-white' : 'border-gray-200 text-taupe hover:border-gold'
+                      className={`w-12 h-10 rounded-lg border font-sans text-xs font-medium transition-all ${selectedSizes.includes(s)
+                          ? 'border-gold bg-gold text-white'
+                          : 'border-gray-200 text-taupe hover:border-gold'
                         }`}>
                       {s}
                     </button>
                   ))}
                 </div>
-              </div>
 
-              {/* Stock */}
-              <div>
-                <label className="block font-sans text-xs uppercase tracking-wider text-taupe mb-1">Stock</label>
-                <input type="number" className={inputClass} value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} min="0" />
+                {/* Stock par taille sélectionnée */}
+                {selectedSizes.length > 0 && (
+                  <div className="bg-beige/40 rounded-xl p-3 space-y-2">
+                    <p className="font-sans text-[0.65rem] uppercase tracking-wider text-taupe">Unités par taille</p>
+                    {selectedSizes.map((s) => (
+                      <div key={s} className="flex items-center justify-between">
+                        <span className="font-sans text-sm font-semibold text-brown w-12">{s}</span>
+                        <div className="flex items-center gap-2">
+                          <button type="button" onClick={() => setStock(s, form.sizeStock[s] - 1)}
+                            className="w-7 h-7 rounded-lg bg-white border border-gray-200 text-brown hover:border-gold transition-colors text-sm font-bold">−</button>
+                          <span className="font-sans text-sm font-semibold text-brown w-6 text-center">{form.sizeStock[s]}</span>
+                          <button type="button" onClick={() => setStock(s, form.sizeStock[s] + 1)}
+                            className="w-7 h-7 rounded-lg bg-white border border-gray-200 text-brown hover:border-gold transition-colors text-sm font-bold">+</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Couleurs */}
