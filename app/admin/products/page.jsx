@@ -1,30 +1,29 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Plus, Pencil, Trash2, Eye, EyeOff } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { Plus, Pencil, Trash2, Eye, EyeOff, Upload, X } from 'lucide-react'
 import { formatPrice } from '@/lib/utils'
+import { uploadProductImage, deleteProductImage } from '@/lib/supabase'
+import Image from 'next/image'
 
 export const dynamic = 'force-dynamic'
-const CATEGORIES = [
-  { id: 'eglise', label: 'Église' },
-  { id: 'ceremonie', label: 'Cérémonies' },
-  { id: 'quotidien', label: 'Quotidien' },
-  { id: 'enfant', label: 'Enfants' },
-]
+
+const ALL_SIZES = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL']
 
 const emptyForm = {
   name: '', description: '', price: '', originalPrice: '',
-  category: 'eglise', tags: [], sizes: [], colors: [],
-  stock: '', active: true, images: [],
+  sizes: [], colors: [], tags: [], stock: 1, active: true, images: [],
 }
 
 export default function AdminProducts() {
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
-  const [modal, setModal] = useState(false)  // 'create' | 'edit' | false
+  const [modal, setModal] = useState(false)
   const [selected, setSelected] = useState(null)
   const [form, setForm] = useState(emptyForm)
   const [saving, setSaving] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const fileRef = useRef(null)
 
   useEffect(() => { fetchProducts() }, [])
 
@@ -48,29 +47,53 @@ export default function AdminProducts() {
       description: product.description ?? '',
       price: product.price,
       originalPrice: product.originalPrice ?? '',
-      category: product.category,
-      tags: product.tags,
-      sizes: product.sizes,
-      colors: product.colors,
-      stock: product.stock,
+      sizes: product.sizes ?? [],
+      colors: product.colors ?? [],
+      tags: product.tags ?? [],
+      stock: product.stock ?? 1,
       active: product.active,
-      images: product.images,
+      images: product.images ?? [],
     })
     setSelected(product)
     setModal('edit')
+  }
+
+  function toggleSize(s) {
+    const already = form.sizes.includes(s)
+    setForm({ ...form, sizes: already ? form.sizes.filter(x => x !== s) : [...form.sizes, s] })
+  }
+
+  async function handleImageUpload(e) {
+    const files = Array.from(e.target.files)
+    if (!files.length) return
+    setUploading(true)
+    try {
+      const slug = form.name
+        ? form.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+        : `product-${Date.now()}`
+      const urls = await Promise.all(files.map((f) => uploadProductImage(f, slug)))
+      setForm((prev) => ({ ...prev, images: [...prev.images, ...urls] }))
+    } catch (err) {
+      alert('Erreur upload : ' + err.message)
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  async function removeImage(url) {
+    try { await deleteProductImage(url) } catch { }
+    setForm((prev) => ({ ...prev, images: prev.images.filter((i) => i !== url) }))
   }
 
   async function handleSave() {
     setSaving(true)
     const url = modal === 'edit' ? `/api/products/${selected.id}` : '/api/products'
     const method = modal === 'edit' ? 'PUT' : 'POST'
-
     await fetch(url, {
       method,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
+      body: JSON.stringify({ ...form, category: form.sizes?.[0] ?? 'unique' }),
     })
-
     setModal(false)
     setSaving(false)
     fetchProducts()
@@ -78,15 +101,14 @@ export default function AdminProducts() {
 
   async function toggleActive(product) {
     await fetch(`/api/products/${product.id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ active: !product.active }),
     })
     fetchProducts()
   }
 
   async function handleDelete(id) {
-    if (!confirm('Désactiver ce produit ?')) return
+    if (!confirm('Supprimer ce produit ?')) return
     await fetch(`/api/products/${id}`, { method: 'DELETE' })
     fetchProducts()
   }
@@ -102,7 +124,6 @@ export default function AdminProducts() {
         </button>
       </div>
 
-      {/* Tableau */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         {loading ? (
           <p className="p-8 text-center text-gray-400 font-sans text-sm">Chargement…</p>
@@ -110,34 +131,45 @@ export default function AdminProducts() {
           <table className="w-full">
             <thead className="bg-gray-50 text-left">
               <tr>
-                {['Nom', 'Catégorie', 'Prix', 'Stock', 'Statut', 'Actions'].map((h) => (
-                  <th key={h} className="px-5 py-3 font-sans text-xs uppercase tracking-wider text-gray-500">{h}</th>
+                {['Photo', 'Nom', 'Tailles', 'Prix', 'Stock', 'Statut', 'Actions'].map((h) => (
+                  <th key={h} className="px-4 py-3 font-sans text-xs uppercase tracking-wider text-gray-500">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {products.map((p) => (
                 <tr key={p.id} className="hover:bg-gray-50/50">
-                  <td className="px-5 py-3.5">
-                    <p className="font-serif text-sm text-brown">{p.name}</p>
-                    {p.tags.length > 0 && (
-                      <span className="text-[0.6rem] uppercase tracking-wider text-gold">{p.tags.join(', ')}</span>
-                    )}
+                  <td className="px-4 py-3">
+                    <div className="w-12 h-14 rounded-lg overflow-hidden bg-beige flex items-center justify-center flex-shrink-0">
+                      {p.images?.[0] ? (
+                        <Image src={p.images[0]} alt={p.name} width={48} height={56} className="object-cover w-full h-full" />
+                      ) : <span className="text-xl">👗</span>}
+                    </div>
                   </td>
-                  <td className="px-5 py-3.5 font-sans text-sm text-gray-500 capitalize">{p.category}</td>
-                  <td className="px-5 py-3.5">
+                  <td className="px-4 py-3">
+                    <p className="font-serif text-sm text-brown">{p.name}</p>
+                    {p.tags?.length > 0 && <span className="text-[0.6rem] uppercase tracking-wider text-gold">{p.tags.join(', ')}</span>}
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex flex-wrap gap-1">
+                      {p.sizes?.length > 0 ? p.sizes.map(s => (
+                        <span key={s} className="inline-flex items-center justify-center px-2 h-6 bg-beige rounded font-sans text-xs font-semibold text-brown">{s}</span>
+                      )) : <span className="text-gray-400 text-xs">—</span>}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
                     <span className="font-sans text-sm font-medium">{formatPrice(p.price)}</span>
                     {p.originalPrice && <span className="text-xs text-gray-400 line-through ml-1">{formatPrice(p.originalPrice)}</span>}
                   </td>
-                  <td className="px-5 py-3.5">
-                    <span className={`font-sans text-sm ${p.stock <= 3 ? 'text-red-500 font-medium' : 'text-gray-600'}`}>{p.stock}</span>
+                  <td className="px-4 py-3">
+                    <span className={`font-sans text-sm ${p.stock <= 1 ? 'text-red-500 font-medium' : 'text-gray-600'}`}>{p.stock}</span>
                   </td>
-                  <td className="px-5 py-3.5">
+                  <td className="px-4 py-3">
                     <span className={`px-2.5 py-1 rounded-full text-xs font-sans ${p.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
                       {p.active ? 'Actif' : 'Masqué'}
                     </span>
                   </td>
-                  <td className="px-5 py-3.5">
+                  <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <button onClick={() => openEdit(p)} className="text-gray-400 hover:text-gold transition-colors"><Pencil size={15} /></button>
                       <button onClick={() => toggleActive(p)} className="text-gray-400 hover:text-blue-500 transition-colors">{p.active ? <EyeOff size={15} /> : <Eye size={15} />}</button>
@@ -151,7 +183,7 @@ export default function AdminProducts() {
         )}
       </div>
 
-      {/* Modal créer / modifier */}
+      {/* Modal */}
       {modal && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6">
@@ -160,16 +192,44 @@ export default function AdminProducts() {
             </h2>
 
             <div className="space-y-4">
+
+              {/* Photos */}
+              <div>
+                <label className="block font-sans text-xs uppercase tracking-wider text-taupe mb-2">Photos</label>
+                {form.images.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {form.images.map((url, i) => (
+                      <div key={i} className="relative w-20 h-24 rounded-lg overflow-hidden group">
+                        <Image src={url} alt="" fill className="object-cover" />
+                        <button onClick={() => removeImage(url)}
+                          className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                          <X size={10} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={handleImageUpload} />
+                <button onClick={() => fileRef.current?.click()} disabled={uploading}
+                  className="flex items-center gap-2 border border-dashed border-gold-light rounded-lg px-4 py-3 text-taupe hover:border-gold hover:text-gold transition-colors font-sans text-sm w-full justify-center">
+                  <Upload size={16} />
+                  {uploading ? 'Upload en cours…' : 'Ajouter des photos'}
+                </button>
+              </div>
+
+              {/* Nom */}
               <div>
                 <label className="block font-sans text-xs uppercase tracking-wider text-taupe mb-1">Nom *</label>
                 <input className={inputClass} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
               </div>
 
+              {/* Description */}
               <div>
                 <label className="block font-sans text-xs uppercase tracking-wider text-taupe mb-1">Description</label>
                 <textarea className={inputClass} rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
               </div>
 
+              {/* Prix */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block font-sans text-xs uppercase tracking-wider text-taupe mb-1">Prix (€) *</label>
@@ -181,34 +241,41 @@ export default function AdminProducts() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-sans text-xs uppercase tracking-wider text-taupe mb-1">Catégorie *</label>
-                  <select className={inputClass} value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
-                    {CATEGORIES.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block font-sans text-xs uppercase tracking-wider text-taupe mb-1">Stock</label>
-                  <input type="number" className={inputClass} value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} />
-                </div>
-              </div>
-
+              {/* Tailles — multi-sélection */}
               <div>
-                <label className="block font-sans text-xs uppercase tracking-wider text-taupe mb-1">Tailles (séparées par virgule)</label>
-                <input className={inputClass} value={form.sizes.join(', ')} onChange={(e) => setForm({ ...form, sizes: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })} placeholder="S, M, L, XL, 2XL" />
+                <label className="block font-sans text-xs uppercase tracking-wider text-taupe mb-2">
+                  Tailles disponibles {form.sizes.length > 0 && <span className="text-gold">({form.sizes.join(', ')})</span>}
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {ALL_SIZES.map((s) => (
+                    <button key={s} type="button" onClick={() => toggleSize(s)}
+                      className={`w-12 h-10 rounded-lg border font-sans text-xs font-medium transition-all ${form.sizes.includes(s) ? 'border-gold bg-gold text-white' : 'border-gray-200 text-taupe hover:border-gold'
+                        }`}>
+                      {s}
+                    </button>
+                  ))}
+                </div>
               </div>
 
+              {/* Stock */}
+              <div>
+                <label className="block font-sans text-xs uppercase tracking-wider text-taupe mb-1">Stock</label>
+                <input type="number" className={inputClass} value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} min="0" />
+              </div>
+
+              {/* Couleurs */}
               <div>
                 <label className="block font-sans text-xs uppercase tracking-wider text-taupe mb-1">Couleurs (séparées par virgule)</label>
-                <input className={inputClass} value={form.colors.join(', ')} onChange={(e) => setForm({ ...form, colors: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })} placeholder="Rose poudré, Blanc" />
+                <input className={inputClass} value={form.colors.join(', ')} onChange={(e) => setForm({ ...form, colors: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })} placeholder="Noir, Blanc, Rose…" />
               </div>
 
+              {/* Tags */}
               <div>
                 <label className="block font-sans text-xs uppercase tracking-wider text-taupe mb-1">Tags (nouveau, exclusif, promo)</label>
                 <input className={inputClass} value={form.tags.join(', ')} onChange={(e) => setForm({ ...form, tags: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })} />
               </div>
 
+              {/* Visible */}
               <label className="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" checked={form.active} onChange={(e) => setForm({ ...form, active: e.target.checked })} className="rounded border-gray-300" />
                 <span className="font-sans text-sm text-gray-600">Produit visible sur le site</span>

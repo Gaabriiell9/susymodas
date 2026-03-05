@@ -1,73 +1,62 @@
-// app/api/products/route.js
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
-import { getAdminFromCookies } from '@/lib/auth'
 
-// ── GET /api/products ─────────────────────────────────────────────────────────
-// Paramètres optionnels : ?category=eglise&active=true
+export const dynamic = 'force-dynamic'
+
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url)
-    const category = searchParams.get('category')
-    const activeOnly = searchParams.get('active') !== 'false'
+    const size = searchParams.get('size')
+    const active = searchParams.get('active')
+
+    const where = {}
+    if (active !== 'false') where.active = true
+    if (size) where.sizes = { has: size }
 
     const products = await prisma.product.findMany({
-      where: {
-        ...(category && { category }),
-        ...(activeOnly && { active: true }),
-      },
+      where,
       orderBy: { createdAt: 'desc' },
     })
 
     return NextResponse.json({ products })
   } catch (error) {
-    console.error('[GET /api/products]', error)
-    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
 
-// ── POST /api/products ────────────────────────────────────────────────────────
-// Réservé admin — crée un nouveau produit
 export async function POST(request) {
-  const admin = await getAdminFromCookies()
-  if (!admin) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
-
   try {
     const body = await request.json()
+    const { name, description, price, originalPrice, size, colors, tags, stock, active, images } = body
 
-    // Validation basique
-    if (!body.name || !body.price || !body.category) {
-      return NextResponse.json({ error: 'Champs requis manquants' }, { status: 400 })
-    }
-
-    // Génère un slug unique depuis le nom
-    const baseSlug = body.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
-    let slug = baseSlug
-    let count = 1
-    while (await prisma.product.findUnique({ where: { slug } })) {
-      slug = `${baseSlug}-${count++}`
-    }
+    const slug = await generateSlug(name)
 
     const product = await prisma.product.create({
       data: {
         slug,
-        name:          body.name,
-        description:   body.description ?? '',
-        price:         parseFloat(body.price),
-        originalPrice: body.originalPrice ? parseFloat(body.originalPrice) : null,
-        category:      body.category,
-        tags:          body.tags ?? [],
-        images:        body.images ?? [],
-        sizes:         body.sizes ?? [],
-        colors:        body.colors ?? [],
-        stock:         parseInt(body.stock ?? 0),
-        active:        body.active ?? true,
+        name,
+        description: description || '',
+        price: parseFloat(price),
+        originalPrice: originalPrice ? parseFloat(originalPrice) : null,
+        category: size || 'unique',
+        sizes: size ? [size] : [],
+        colors: colors || [],
+        tags: tags || [],
+        stock: parseInt(stock) || 1,
+        active: active ?? true,
+        images: images || [],
       },
     })
 
     return NextResponse.json({ product }, { status: 201 })
   } catch (error) {
-    console.error('[POST /api/products]', error)
-    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
+}
+
+async function generateSlug(name) {
+  let slug = name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+  const existing = await prisma.product.findUnique({ where: { slug } })
+  if (existing) slug = `${slug}-${Date.now()}`
+  return slug
 }

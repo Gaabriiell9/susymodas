@@ -1,11 +1,23 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { CATEGORIES } from '@/data/products'
 import FilterTabs from '@/components/product/FilterTabs'
 import ProductCard from '@/components/product/ProductCard'
 import SectionHeader from '@/components/ui/SectionHeader'
 import Button from '@/components/ui/Button'
+
+const SIZES = [
+  { id: 'all', label: 'Tout voir' },
+  { id: 'XS', label: 'XS' },
+  { id: 'S', label: 'S' },
+  { id: 'M', label: 'M' },
+  { id: 'L', label: 'L' },
+  { id: 'XL', label: 'XL' },
+  { id: '2XL', label: '2XL' },
+  { id: '3XL', label: '3XL' },
+  { id: '4XL', label: '4XL' },
+  { id: '5XL', label: '5XL' },
+]
 
 export default function ProductGrid() {
   const [products, setProducts] = useState([])
@@ -18,7 +30,7 @@ export default function ProductGrid() {
       try {
         const url = activeFilter === 'all'
           ? '/api/products'
-          : `/api/products?category=${activeFilter}`
+          : `/api/products?size=${activeFilter}`
         const res = await fetch(url)
         const data = await res.json()
         setProducts(data.products ?? [])
@@ -41,7 +53,7 @@ export default function ProductGrid() {
         />
 
         <FilterTabs
-          categories={CATEGORIES}
+          categories={SIZES}
           active={activeFilter}
           onChange={setActiveFilter}
         />
@@ -69,7 +81,7 @@ export default function ProductGrid() {
 
         {!loading && products.length === 0 && (
           <p className="text-center font-serif italic text-taupe text-lg mt-16">
-            Aucun modèle dans cette catégorie pour l&apos;instant.
+            Aucune robe disponible dans cette taille pour l&apos;instant.
           </p>
         )}
 

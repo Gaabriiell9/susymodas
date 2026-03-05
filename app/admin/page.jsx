@@ -7,17 +7,12 @@ import { uploadProductImage, deleteProductImage } from '@/lib/supabase'
 import Image from 'next/image'
 
 export const dynamic = 'force-dynamic'
-const CATEGORIES = [
-  { id: 'eglise', label: 'Église' },
-  { id: 'ceremonie', label: 'Cérémonies' },
-  { id: 'quotidien', label: 'Quotidien' },
-  { id: 'enfant', label: 'Enfants' },
-]
+
+const SIZES = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL']
 
 const emptyForm = {
   name: '', description: '', price: '', originalPrice: '',
-  category: 'eglise', tags: [], sizes: [], colors: [],
-  stock: '', active: true, images: [],
+  sizes: [], colors: [], tags: [], stock: 1, active: true, images: [],
 }
 
 export default function AdminProducts() {
@@ -52,11 +47,10 @@ export default function AdminProducts() {
       description: product.description ?? '',
       price: product.price,
       originalPrice: product.originalPrice ?? '',
-      category: product.category,
-      tags: product.tags,
-      sizes: product.sizes,
-      colors: product.colors,
-      stock: product.stock,
+      size: product.sizes?.[0] ?? 'M',
+      colors: product.colors ?? [],
+      tags: product.tags ?? [],
+      stock: product.stock ?? 1,
       active: product.active,
       images: product.images ?? [],
     })
@@ -64,17 +58,14 @@ export default function AdminProducts() {
     setModal('edit')
   }
 
-  // ── Upload photo ────────────────────────────────────────────────────────────
   async function handleImageUpload(e) {
     const files = Array.from(e.target.files)
     if (!files.length) return
-
     setUploading(true)
     try {
       const slug = form.name
         ? form.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
         : `product-${Date.now()}`
-
       const urls = await Promise.all(files.map((f) => uploadProductImage(f, slug)))
       setForm((prev) => ({ ...prev, images: [...prev.images, ...urls] }))
     } catch (err) {
@@ -85,25 +76,19 @@ export default function AdminProducts() {
   }
 
   async function removeImage(url) {
-    try {
-      await deleteProductImage(url)
-      setForm((prev) => ({ ...prev, images: prev.images.filter((i) => i !== url) }))
-    } catch {
-      setForm((prev) => ({ ...prev, images: prev.images.filter((i) => i !== url) }))
-    }
+    try { await deleteProductImage(url) } catch { }
+    setForm((prev) => ({ ...prev, images: prev.images.filter((i) => i !== url) }))
   }
 
   async function handleSave() {
     setSaving(true)
     const url = modal === 'edit' ? `/api/products/${selected.id}` : '/api/products'
     const method = modal === 'edit' ? 'PUT' : 'POST'
-
     await fetch(url, {
       method,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
+      body: JSON.stringify({ ...form, category: form.sizes?.[0] ?? 'unique' }),
     })
-
     setModal(false)
     setSaving(false)
     fetchProducts()
@@ -111,15 +96,14 @@ export default function AdminProducts() {
 
   async function toggleActive(product) {
     await fetch(`/api/products/${product.id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ active: !product.active }),
     })
     fetchProducts()
   }
 
   async function handleDelete(id) {
-    if (!confirm('Désactiver ce produit ?')) return
+    if (!confirm('Supprimer ce produit ?')) return
     await fetch(`/api/products/${id}`, { method: 'DELETE' })
     fetchProducts()
   }
@@ -135,7 +119,6 @@ export default function AdminProducts() {
         </button>
       </div>
 
-      {/* Tableau */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         {loading ? (
           <p className="p-8 text-center text-gray-400 font-sans text-sm">Chargement…</p>
@@ -143,7 +126,7 @@ export default function AdminProducts() {
           <table className="w-full">
             <thead className="bg-gray-50 text-left">
               <tr>
-                {['Photo', 'Nom', 'Catégorie', 'Prix', 'Stock', 'Statut', 'Actions'].map((h) => (
+                {['Photo', 'Nom', 'Taille', 'Prix', 'Stock', 'Statut', 'Actions'].map((h) => (
                   <th key={h} className="px-4 py-3 font-sans text-xs uppercase tracking-wider text-gray-500">{h}</th>
                 ))}
               </tr>
@@ -151,27 +134,28 @@ export default function AdminProducts() {
             <tbody className="divide-y divide-gray-50">
               {products.map((p) => (
                 <tr key={p.id} className="hover:bg-gray-50/50">
-                  {/* Photo */}
                   <td className="px-4 py-3">
                     <div className="w-12 h-14 rounded-lg overflow-hidden bg-beige flex items-center justify-center flex-shrink-0">
                       {p.images?.[0] ? (
                         <Image src={p.images[0]} alt={p.name} width={48} height={56} className="object-cover w-full h-full" />
-                      ) : (
-                        <span className="text-xl">👗</span>
-                      )}
+                      ) : <span className="text-xl">👗</span>}
                     </div>
                   </td>
                   <td className="px-4 py-3">
                     <p className="font-serif text-sm text-brown">{p.name}</p>
-                    {p.tags.length > 0 && <span className="text-[0.6rem] uppercase tracking-wider text-gold">{p.tags.join(', ')}</span>}
+                    {p.tags?.length > 0 && <span className="text-[0.6rem] uppercase tracking-wider text-gold">{p.tags.join(', ')}</span>}
                   </td>
-                  <td className="px-4 py-3 font-sans text-sm text-gray-500 capitalize">{p.category}</td>
+                  <td className="px-4 py-3">
+                    <span className="inline-flex items-center justify-center w-10 h-8 bg-beige rounded-lg font-sans text-xs font-semibold text-brown">
+                      {p.sizes?.[0] ?? '—'}
+                    </span>
+                  </td>
                   <td className="px-4 py-3">
                     <span className="font-sans text-sm font-medium">{formatPrice(p.price)}</span>
                     {p.originalPrice && <span className="text-xs text-gray-400 line-through ml-1">{formatPrice(p.originalPrice)}</span>}
                   </td>
                   <td className="px-4 py-3">
-                    <span className={`font-sans text-sm ${p.stock <= 3 ? 'text-red-500 font-medium' : 'text-gray-600'}`}>{p.stock}</span>
+                    <span className={`font-sans text-sm ${p.stock <= 1 ? 'text-red-500 font-medium' : 'text-gray-600'}`}>{p.stock}</span>
                   </td>
                   <td className="px-4 py-3">
                     <span className={`px-2.5 py-1 rounded-full text-xs font-sans ${p.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
@@ -202,41 +186,25 @@ export default function AdminProducts() {
 
             <div className="space-y-4">
 
-              {/* ── Zone photos ── */}
+              {/* Photos */}
               <div>
                 <label className="block font-sans text-xs uppercase tracking-wider text-taupe mb-2">Photos</label>
-
-                {/* Photos existantes */}
                 {form.images.length > 0 && (
                   <div className="flex flex-wrap gap-2 mb-3">
                     {form.images.map((url, i) => (
                       <div key={i} className="relative w-20 h-24 rounded-lg overflow-hidden group">
                         <Image src={url} alt="" fill className="object-cover" />
-                        <button
-                          onClick={() => removeImage(url)}
-                          className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
+                        <button onClick={() => removeImage(url)}
+                          className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                           <X size={10} />
                         </button>
                       </div>
                     ))}
                   </div>
                 )}
-
-                {/* Bouton upload */}
-                <input
-                  ref={fileRef}
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  className="hidden"
-                  onChange={handleImageUpload}
-                />
-                <button
-                  onClick={() => fileRef.current?.click()}
-                  disabled={uploading}
-                  className="flex items-center gap-2 border border-dashed border-gold-light rounded-lg px-4 py-3 text-taupe hover:border-gold hover:text-gold transition-colors font-sans text-sm w-full justify-center"
-                >
+                <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={handleImageUpload} />
+                <button onClick={() => fileRef.current?.click()} disabled={uploading}
+                  className="flex items-center gap-2 border border-dashed border-gold-light rounded-lg px-4 py-3 text-taupe hover:border-gold hover:text-gold transition-colors font-sans text-sm w-full justify-center">
                   <Upload size={16} />
                   {uploading ? 'Upload en cours…' : 'Ajouter des photos'}
                 </button>
@@ -265,25 +233,20 @@ export default function AdminProducts() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-sans text-xs uppercase tracking-wider text-taupe mb-1">Catégorie *</label>
-                  <select className={inputClass} value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
-                    {CATEGORIES.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
+                  <label className="block font-sans text-xs uppercase tracking-wider text-taupe mb-1">Taille *</label>
+                  <select className={inputClass} value={form.size} onChange={(e) => setForm({ ...form, size: e.target.value })}>
+                    {SIZES.map((s) => <option key={s} value={s}>{s}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className="block font-sans text-xs uppercase tracking-wider text-taupe mb-1">Stock</label>
-                  <input type="number" className={inputClass} value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} />
+                  <input type="number" className={inputClass} value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} min="0" max="99" />
                 </div>
               </div>
 
               <div>
-                <label className="block font-sans text-xs uppercase tracking-wider text-taupe mb-1">Tailles (séparées par virgule)</label>
-                <input className={inputClass} value={form.sizes.join(', ')} onChange={(e) => setForm({ ...form, sizes: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })} placeholder="S, M, L, XL, 2XL" />
-              </div>
-
-              <div>
                 <label className="block font-sans text-xs uppercase tracking-wider text-taupe mb-1">Couleurs (séparées par virgule)</label>
-                <input className={inputClass} value={form.colors.join(', ')} onChange={(e) => setForm({ ...form, colors: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })} placeholder="Rose poudré, Blanc" />
+                <input className={inputClass} value={form.colors.join(', ')} onChange={(e) => setForm({ ...form, colors: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })} placeholder="Noir, Blanc, Rose…" />
               </div>
 
               <div>
