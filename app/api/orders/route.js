@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { getAdminFromCookies } from '@/lib/auth'
 
+export const dynamic = 'force-dynamic'
 // ── GET /api/orders ───────────────────────────────────────────────────────────
 // Réservé admin — liste toutes les commandes
 export async function GET(request) {
@@ -53,20 +54,20 @@ export async function POST(request) {
     }
 
     // Génère une référence unique
-    const count  = await prisma.order.count()
-    const ref    = `SME-${new Date().getFullYear()}-${String(count + 1).padStart(4, '0')}`
+    const count = await prisma.order.count()
+    const ref = `SME-${new Date().getFullYear()}-${String(count + 1).padStart(4, '0')}`
 
     const order = await prisma.order.create({
       data: {
-        reference:     ref,
+        reference: ref,
         totalAmount,
-        firstName:     body.firstName,
-        lastName:      body.lastName,
-        email:         body.email,
-        phone:         body.phone,
-        address:       body.address,
-        city:          body.city,
-        notes:         body.notes,
+        firstName: body.firstName,
+        lastName: body.lastName,
+        email: body.email,
+        phone: body.phone,
+        address: body.address,
+        city: body.city,
+        notes: body.notes,
         paymentMethod: body.paymentMethod ?? 'WHATSAPP',
         items: { create: itemsData },
       },

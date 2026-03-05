@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs'
 import prisma from '@/lib/prisma'
 import { createToken, COOKIE_NAME } from '@/lib/auth'
 
+export const dynamic = 'force-dynamic'
 // ── POST /api/auth  →  Login ──────────────────────────────────────────────────
 export async function POST(request) {
   try {
@@ -30,10 +31,10 @@ export async function POST(request) {
     // Set cookie HTTP-only sécurisé
     response.cookies.set(COOKIE_NAME, token, {
       httpOnly: true,
-      secure:   process.env.NODE_ENV === 'production',
+      secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge:   60 * 60 * 24 * 7, // 7 jours
-      path:     '/',
+      maxAge: 60 * 60 * 24 * 7, // 7 jours
+      path: '/',
     })
 
     return response
