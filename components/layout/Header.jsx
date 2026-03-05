@@ -1,17 +1,16 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Logo from '@/components/ui/Logo'
 import { useCart } from '@/context/CartContext'
 import { useWishlist } from '@/context/WishlistContext'
-import { ShoppingBag, Search, Menu, X, Heart } from 'lucide-react'
+import { ShoppingBag, Search, Heart } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export default function Header() {
   const { itemCount, toggleCart } = useCart()
   const { wishlistCount } = useWishlist()
-  const [mobileOpen, setMobileOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
@@ -51,22 +50,8 @@ export default function Header() {
               </span>
             )}
           </button>
-
-          <button onClick={() => setMobileOpen((v) => !v)} className="md:hidden text-brown-light hover:text-gold transition-colors">
-            {mobileOpen ? <X size={22} /> : <Menu size={22} />}
-          </button>
         </div>
       </div>
-
-      {/* Menu mobile */}
-      {mobileOpen && (
-        <nav className="md:hidden border-t border-beige bg-white px-5 py-4 flex flex-col gap-4">
-          <Link href="/favoris" onClick={() => setMobileOpen(false)}
-            className="font-sans text-sm tracking-[0.1em] uppercase text-brown-light hover:text-gold transition-colors flex items-center gap-2">
-            <Heart size={14} /> Mes Favoris {wishlistCount > 0 && `(${wishlistCount})`}
-          </Link>
-        </nav>
-      )}
     </header>
   )
 }
