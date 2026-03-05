@@ -5,7 +5,8 @@ export const dynamic = 'force-dynamic'
 
 export async function GET(request, { params }) {
   try {
-    const product = await prisma.product.findUnique({ where: { id: params.id } })
+    const id = parseInt(params.id)
+    const product = await prisma.product.findUnique({ where: { id } })
     if (!product) return NextResponse.json({ error: 'Produit introuvable' }, { status: 404 })
     return NextResponse.json({ product })
   } catch (error) {
@@ -15,6 +16,7 @@ export async function GET(request, { params }) {
 
 export async function PUT(request, { params }) {
   try {
+    const id = parseInt(params.id)
     const body = await request.json()
     const data = {}
 
@@ -30,7 +32,7 @@ export async function PUT(request, { params }) {
     if (body.active !== undefined) data.active = body.active
     if (body.images !== undefined) data.images = body.images
 
-    const product = await prisma.product.update({ where: { id: params.id }, data })
+    const product = await prisma.product.update({ where: { id }, data })
     return NextResponse.json({ product })
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })
@@ -39,8 +41,8 @@ export async function PUT(request, { params }) {
 
 export async function DELETE(request, { params }) {
   try {
-    // Suppression définitive
-    await prisma.product.delete({ where: { id: params.id } })
+    const id = parseInt(params.id)
+    await prisma.product.delete({ where: { id } })
     return NextResponse.json({ success: true })
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })
