@@ -69,7 +69,7 @@ export default function ProductGrid() {
 
         {!loading && products.length === 0 && (
           <p className="text-center font-serif italic text-taupe text-lg mt-16">
-            Aucun modèle dans cette catégorie pour l'instant.
+            Aucun modèle dans cette catégorie pour l&apos;instant.
           </p>
         )}
 

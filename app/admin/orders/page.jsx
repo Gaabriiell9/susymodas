@@ -4,17 +4,17 @@ import { useState, useEffect } from 'react'
 import { formatPrice } from '@/lib/utils'
 
 const STATUSES = {
-  PENDING:   { label: 'En attente',  color: 'bg-amber-100 text-amber-700',   next: 'CONFIRMED' },
-  CONFIRMED: { label: 'Confirmée',   color: 'bg-blue-100 text-blue-700',     next: 'SHIPPED' },
-  SHIPPED:   { label: 'Expédiée',    color: 'bg-purple-100 text-purple-700', next: 'DELIVERED' },
-  DELIVERED: { label: 'Livrée',      color: 'bg-green-100 text-green-700',   next: null },
-  CANCELLED: { label: 'Annulée',     color: 'bg-red-100 text-red-700',       next: null },
+  PENDING: { label: 'En attente', color: 'bg-amber-100 text-amber-700', next: 'CONFIRMED' },
+  CONFIRMED: { label: 'Confirmée', color: 'bg-blue-100 text-blue-700', next: 'SHIPPED' },
+  SHIPPED: { label: 'Expédiée', color: 'bg-purple-100 text-purple-700', next: 'DELIVERED' },
+  DELIVERED: { label: 'Livrée', color: 'bg-green-100 text-green-700', next: null },
+  CANCELLED: { label: 'Annulée', color: 'bg-red-100 text-red-700', next: null },
 }
 
 export default function AdminOrders() {
-  const [orders,   setOrders]   = useState([])
-  const [loading,  setLoading]  = useState(true)
-  const [filter,   setFilter]   = useState('all')
+  const [orders, setOrders] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [filter, setFilter] = useState('all')
   const [selected, setSelected] = useState(null)
 
   useEffect(() => { fetchOrders() }, [filter])
@@ -22,7 +22,7 @@ export default function AdminOrders() {
   async function fetchOrders() {
     setLoading(true)
     const url = filter === 'all' ? '/api/orders' : `/api/orders?status=${filter}`
-    const res  = await fetch(url)
+    const res = await fetch(url)
     const data = await res.json()
     setOrders(data.orders ?? [])
     setLoading(false)
@@ -30,9 +30,9 @@ export default function AdminOrders() {
 
   async function updateStatus(orderId, status) {
     await fetch(`/api/orders/${orderId}`, {
-      method:  'PATCH',
+      method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ status }),
+      body: JSON.stringify({ status }),
     })
     fetchOrders()
     if (selected?.id === orderId) setSelected({ ...selected, status })
@@ -48,9 +48,8 @@ export default function AdminOrders() {
           <button
             key={key}
             onClick={() => setFilter(key)}
-            className={`px-4 py-1.5 rounded-full font-sans text-xs uppercase tracking-wider transition-colors ${
-              filter === key ? 'bg-gold text-white' : 'bg-white border border-gray-200 text-gray-500 hover:border-gold'
-            }`}
+            className={`px-4 py-1.5 rounded-full font-sans text-xs uppercase tracking-wider transition-colors ${filter === key ? 'bg-gold text-white' : 'bg-white border border-gray-200 text-gray-500 hover:border-gold'
+              }`}
           >
             {label}
           </button>
