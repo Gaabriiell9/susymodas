@@ -21,7 +21,7 @@ export default function FavorisPage() {
                         <Heart size={48} strokeWidth={1} />
                         <p className="font-serif text-xl italic">Aucun favori pour l&apos;instant</p>
                         <p className="font-sans text-sm text-center max-w-xs">
-                            Cliquez sur le ❤️ sur les robes qui vous plaisent pour les retrouver ici.
+                            Cliquez sur le sur les robes qui vous plaisent pour les retrouver ici.
                         </p>
                         <Link href="/" className="px-8 py-3 bg-gold text-white font-sans text-xs uppercase tracking-widest rounded-lg hover:bg-rose-deep transition-colors">
                             Découvrir la collection
