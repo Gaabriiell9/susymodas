@@ -27,7 +27,7 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const body = await request.json()
-    const { name, description, price, originalPrice, size, colors, tags, stock, active, images } = body
+    const { name, description, price, originalPrice, sizes, colors, tags, stock, active, images, category } = body
 
     const slug = await generateSlug(name)
 
@@ -38,11 +38,11 @@ export async function POST(request) {
         description: description || '',
         price: parseFloat(price),
         originalPrice: originalPrice ? parseFloat(originalPrice) : null,
-        category: size || 'unique',
-        sizes: size ? [size] : [],
+        category: category || sizes?.[0] || 'unique',
+        sizes: sizes || [],
         colors: colors || [],
         tags: tags || [],
-        stock: parseInt(stock) || 1,
+        stock: parseInt(stock) || 0,
         active: active ?? true,
         images: images || [],
       },
