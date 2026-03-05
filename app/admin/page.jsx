@@ -6,6 +6,7 @@ import { formatPrice } from '@/lib/utils'
 import { uploadProductImage, deleteProductImage } from '@/lib/supabase'
 import Image from 'next/image'
 
+export const dynamic = 'force-dynamic'
 const CATEGORIES = [
   { id: 'eglise', label: 'Église' },
   { id: 'ceremonie', label: 'Cérémonies' },

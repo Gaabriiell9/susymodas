@@ -4,11 +4,12 @@ import { useState, useEffect } from 'react'
 import { Plus, Pencil, Trash2, Eye, EyeOff } from 'lucide-react'
 import { formatPrice } from '@/lib/utils'
 
+export const dynamic = 'force-dynamic'
 const CATEGORIES = [
-  { id: 'eglise',    label: 'Église' },
+  { id: 'eglise', label: 'Église' },
   { id: 'ceremonie', label: 'Cérémonies' },
   { id: 'quotidien', label: 'Quotidien' },
-  { id: 'enfant',    label: 'Enfants' },
+  { id: 'enfant', label: 'Enfants' },
 ]
 
 const emptyForm = {
@@ -19,17 +20,17 @@ const emptyForm = {
 
 export default function AdminProducts() {
   const [products, setProducts] = useState([])
-  const [loading,  setLoading]  = useState(true)
-  const [modal,    setModal]    = useState(false)  // 'create' | 'edit' | false
+  const [loading, setLoading] = useState(true)
+  const [modal, setModal] = useState(false)  // 'create' | 'edit' | false
   const [selected, setSelected] = useState(null)
-  const [form,     setForm]     = useState(emptyForm)
-  const [saving,   setSaving]   = useState(false)
+  const [form, setForm] = useState(emptyForm)
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => { fetchProducts() }, [])
 
   async function fetchProducts() {
     setLoading(true)
-    const res  = await fetch('/api/products?active=false')
+    const res = await fetch('/api/products?active=false')
     const data = await res.json()
     setProducts(data.products ?? [])
     setLoading(false)
@@ -43,17 +44,17 @@ export default function AdminProducts() {
 
   function openEdit(product) {
     setForm({
-      name:          product.name,
-      description:   product.description ?? '',
-      price:         product.price,
+      name: product.name,
+      description: product.description ?? '',
+      price: product.price,
       originalPrice: product.originalPrice ?? '',
-      category:      product.category,
-      tags:          product.tags,
-      sizes:         product.sizes,
-      colors:        product.colors,
-      stock:         product.stock,
-      active:        product.active,
-      images:        product.images,
+      category: product.category,
+      tags: product.tags,
+      sizes: product.sizes,
+      colors: product.colors,
+      stock: product.stock,
+      active: product.active,
+      images: product.images,
     })
     setSelected(product)
     setModal('edit')
@@ -61,7 +62,7 @@ export default function AdminProducts() {
 
   async function handleSave() {
     setSaving(true)
-    const url    = modal === 'edit' ? `/api/products/${selected.id}` : '/api/products'
+    const url = modal === 'edit' ? `/api/products/${selected.id}` : '/api/products'
     const method = modal === 'edit' ? 'PUT' : 'POST'
 
     await fetch(url, {
@@ -77,9 +78,9 @@ export default function AdminProducts() {
 
   async function toggleActive(product) {
     await fetch(`/api/products/${product.id}`, {
-      method:  'PUT',
+      method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ active: !product.active }),
+      body: JSON.stringify({ active: !product.active }),
     })
     fetchProducts()
   }
