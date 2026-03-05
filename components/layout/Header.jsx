@@ -8,11 +8,6 @@ import { useWishlist } from '@/context/WishlistContext'
 import { ShoppingBag, Search, Menu, X, Heart } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-const NAV_LINKS = [
-  { label: 'Notre Boutique', href: '#notre-boutique' },
-  { label: 'Contact', href: '#contact' },
-]
-
 export default function Header() {
   const { itemCount, toggleCart } = useCart()
   const { wishlistCount } = useWishlist()
@@ -30,20 +25,6 @@ export default function Header() {
       <div className="mx-auto max-w-7xl px-4 sm:px-10 flex items-center justify-between h-16 sm:h-20">
 
         <Logo />
-
-        {/* Navigation desktop */}
-        <nav className="hidden md:flex items-center gap-8">
-          {NAV_LINKS.map(({ label, href }) => (
-            <Link key={label} href={href}
-              className={cn(
-                'relative font-sans text-[0.75rem] tracking-[0.12em] uppercase text-brown-light font-medium',
-                'transition-colors duration-200 hover:text-gold',
-                'after:absolute after:-bottom-1 after:left-0 after:h-px after:w-0 after:bg-gold after:transition-all after:duration-300 hover:after:w-full'
-              )}>
-              {label}
-            </Link>
-          ))}
-        </nav>
 
         {/* Actions */}
         <div className="flex items-center gap-3 sm:gap-4">
@@ -80,12 +61,6 @@ export default function Header() {
       {/* Menu mobile */}
       {mobileOpen && (
         <nav className="md:hidden border-t border-beige bg-white px-5 py-4 flex flex-col gap-4">
-          {NAV_LINKS.map(({ label, href }) => (
-            <Link key={label} href={href} onClick={() => setMobileOpen(false)}
-              className="font-sans text-sm tracking-[0.1em] uppercase text-brown-light hover:text-gold transition-colors">
-              {label}
-            </Link>
-          ))}
           <Link href="/favoris" onClick={() => setMobileOpen(false)}
             className="font-sans text-sm tracking-[0.1em] uppercase text-brown-light hover:text-gold transition-colors flex items-center gap-2">
             <Heart size={14} /> Mes Favoris {wishlistCount > 0 && `(${wishlistCount})`}

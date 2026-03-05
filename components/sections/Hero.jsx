@@ -46,24 +46,11 @@ export default function Hero() {
               Nous Contacter
             </a>
           </div>
-
-          <div className="mt-10 pt-6 border-t border-gold-light flex gap-4 items-start">
-            <div className="w-0.5 h-10 bg-gold rounded-full flex-shrink-0 mt-1" />
-            <div>
-              <p className="font-serif italic text-taupe leading-relaxed">
-                « Que votre ornement soit, non cette parure extérieure... mais l&apos;homme caché dans le cœur. »
-              </p>
-              <span className="font-sans text-[0.68rem] tracking-[0.18em] uppercase text-gold mt-1 block">
-                1 Pierre 3:3-4
-              </span>
-            </div>
-          </div>
         </div>
 
         {/* Photo hero */}
         <div className="hidden lg:flex justify-center items-center">
           <div className="relative">
-            {/* Cadre arrondi avec la vraie photo */}
             <div className="w-[400px] h-[520px] rounded-[200px_200px_180px_180px] overflow-hidden shadow-2xl relative">
               <Image
                 src="/hero-robe.jpg"
