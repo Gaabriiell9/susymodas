@@ -1,97 +1,97 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
-import Logo from '@/components/ui/Logo'
+import Image from 'next/image'
+import { ShoppingBag, Heart } from 'lucide-react'
 import { useCart } from '@/context/CartContext'
 import { useWishlist } from '@/context/WishlistContext'
-import { ShoppingBag, Search, Menu, X, Heart } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { formatPrice, cn } from '@/lib/utils'
+import Badge from '@/components/ui/Badge'
+import Stars from '@/components/ui/Stars'
 
-const NAV_LINKS = [
-  { label: 'Notre Boutique', href: '#notre-boutique' },
-  { label: 'Contact', href: '#contact' },
-]
+export default function ProductCard({ product }) {
+  const { addItem, openCart } = useCart()
+  const { toggle, isWished } = useWishlist()
+  const [added, setAdded] = useState(false)
 
-export default function Header() {
-  const { itemCount, toggleCart } = useCart()
-  const { wishlistCount } = useWishlist()
-  const [mobileOpen, setMobileOpen] = useState(false)
-  const [scrolled, setScrolled] = useState(false)
+  const wished = isWished(product.id)
+  const badge = product.tags?.[0] ?? null
+  const hasImage = product.images?.length > 0
 
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 10)
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
+  function handleAdd(e) {
+    e.preventDefault()
+    e.stopPropagation()
+    addItem({ id: product.id, name: product.name, price: product.price, images: product.images })
+    setAdded(true)
+    openCart()
+    setTimeout(() => setAdded(false), 1500)
+  }
+
+  function handleWish(e) {
+    e.preventDefault()
+    e.stopPropagation()
+    toggle(product)
+  }
 
   return (
-    <header className={cn('sticky top-0 z-50 bg-white transition-shadow duration-300', scrolled ? 'shadow-sm' : 'border-b border-gold-light')}>
-      <div className="mx-auto max-w-7xl px-4 sm:px-10 flex items-center justify-between h-16 sm:h-20">
+    <Link href={`/produit/${product.slug}`}>
+      <article className="group relative bg-cream rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-xl shadow-sm cursor-pointer">
 
-        <Logo />
+        {/* Zone image */}
+        <div className="relative flex items-center justify-center overflow-hidden aspect-[4/3] sm:aspect-[3/4]">
+          {hasImage ? (
+            <Image src={product.images[0]} alt={product.name} fill className="object-cover" sizes="(max-width: 768px) 50vw, 25vw" />
+          ) : (
+            <span className="text-5xl sm:text-6xl opacity-40 select-none" aria-hidden>👗</span>
+          )}
 
-        {/* Navigation desktop */}
-        <nav className="hidden md:flex items-center gap-8">
-          {NAV_LINKS.map(({ label, href }) => (
-            <Link key={label} href={href}
-              className={cn(
-                'relative font-sans text-[0.75rem] tracking-[0.12em] uppercase text-brown-light font-medium',
-                'transition-colors duration-200 hover:text-gold',
-                'after:absolute after:-bottom-1 after:left-0 after:h-px after:w-0 after:bg-gold after:transition-all after:duration-300 hover:after:w-full'
+          {badge && <Badge label={badge} />}
+
+          {/* Coeur favoris — toujours visible sur mobile */}
+          <button
+            onClick={handleWish}
+            className="absolute top-2.5 right-2.5 w-8 h-8 rounded-full bg-white/90 shadow flex items-center justify-center sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-200"
+            aria-label={wished ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+          >
+            <Heart size={14} className={wished ? 'fill-rose-deep text-rose-deep' : 'text-brown-light'} />
+          </button>
+
+          {/* Bouton panier desktop au survol */}
+          <div className="absolute inset-x-0 bottom-0 hidden sm:block translate-y-full group-hover:translate-y-0 transition-transform duration-300 p-2.5">
+            <button onClick={handleAdd}
+              className={cn('w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-white font-sans text-[0.68rem] tracking-[0.08em] uppercase font-medium transition-colors duration-200',
+                added ? 'bg-green-600' : 'bg-gold hover:bg-rose-deep'
               )}>
-              {label}
-            </Link>
-          ))}
-        </nav>
+              <ShoppingBag size={13} />
+              {added ? '✓ Ajouté !' : 'Ajouter au panier'}
+            </button>
+          </div>
+        </div>
 
-        {/* Actions */}
-        <div className="flex items-center gap-3 sm:gap-4">
-          <button className="text-brown-light hover:text-gold transition-colors" aria-label="Rechercher">
-            <Search size={20} strokeWidth={1.5} />
-          </button>
+        {/* Infos */}
+        <div className="p-3 sm:p-4">
+          <p className="font-sans text-[0.6rem] tracking-[0.1em] uppercase text-taupe mb-0.5">{product.category}</p>
+          <h3 className="font-serif text-sm sm:text-base text-brown leading-snug">{product.name}</h3>
 
-          {/* Favoris */}
-          <Link href="/favoris" className="relative text-brown-light hover:text-gold transition-colors" aria-label="Favoris">
-            <Heart size={20} strokeWidth={1.5} />
-            {wishlistCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-gold text-[0.55rem] font-medium text-white">
-                {wishlistCount}
-              </span>
-            )}
-          </Link>
+          <div className="flex items-center justify-between mt-1.5 sm:mt-2">
+            <div className="flex items-baseline gap-1.5">
+              <span className="font-serif text-base sm:text-lg font-semibold text-brown">{formatPrice(product.price)}</span>
+              {product.originalPrice && <span className="font-sans text-[0.7rem] text-taupe line-through">{formatPrice(product.originalPrice)}</span>}
+            </div>
+            <Stars rating={5} />
+          </div>
 
-          {/* Panier */}
-          <button onClick={toggleCart} className="relative text-brown-light hover:text-gold transition-colors" aria-label="Panier">
-            <ShoppingBag size={20} strokeWidth={1.5} />
-            {itemCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-rose-deep text-[0.55rem] font-medium text-white">
-                {itemCount}
-              </span>
-            )}
-          </button>
-
-          <button onClick={() => setMobileOpen((v) => !v)} className="md:hidden text-brown-light hover:text-gold transition-colors">
-            {mobileOpen ? <X size={22} /> : <Menu size={22} />}
+          {/* Bouton panier mobile */}
+          <button onClick={handleAdd}
+            className={cn('sm:hidden mt-2.5 w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-white font-sans text-[0.68rem] tracking-[0.06em] uppercase font-medium transition-colors duration-200',
+              added ? 'bg-green-600' : 'bg-gold'
+            )}>
+            <ShoppingBag size={12} />
+            {added ? '✓ Ajouté !' : 'Panier'}
           </button>
         </div>
-      </div>
-
-      {/* Menu mobile */}
-      {mobileOpen && (
-        <nav className="md:hidden border-t border-beige bg-white px-5 py-4 flex flex-col gap-4">
-          {NAV_LINKS.map(({ label, href }) => (
-            <Link key={label} href={href} onClick={() => setMobileOpen(false)}
-              className="font-sans text-sm tracking-[0.1em] uppercase text-brown-light hover:text-gold transition-colors">
-              {label}
-            </Link>
-          ))}
-          <Link href="/favoris" onClick={() => setMobileOpen(false)}
-            className="font-sans text-sm tracking-[0.1em] uppercase text-brown-light hover:text-gold transition-colors flex items-center gap-2">
-            <Heart size={14} /> Mes Favoris {wishlistCount > 0 && `(${wishlistCount})`}
-          </Link>
-        </nav>
-      )}
-    </header>
+      </article>
+    </Link>
   )
 }
