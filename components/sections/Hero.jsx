@@ -68,7 +68,7 @@ export default function Hero() {
             </div>
             <div className="absolute -right-4 top-20 bg-white border border-gold-light rounded-xl px-4 py-3 shadow-lg">
               <strong className="block font-serif text-brown">+100 modèles</strong>
-              <span className="font-sans text-[0.68rem] text-taupe">Tailles S à 5XL</span>
+              <span className="font-sans text-[0.68rem] text-taupe">Tailles S à 3XL</span>
             </div>
           </div>
         </div>

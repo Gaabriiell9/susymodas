@@ -15,8 +15,6 @@ const SIZES = [
   { id: 'XL', label: 'XL' },
   { id: '2XL', label: '2XL' },
   { id: '3XL', label: '3XL' },
-  { id: '4XL', label: '4XL' },
-  { id: '5XL', label: '5XL' },
 ]
 
 export default function ProductGrid() {
@@ -51,7 +49,6 @@ export default function ProductGrid() {
           title='Robes <em class="text-gold" style="font-style:italic">Choisies avec Soin</em>'
           className="mb-8 sm:mb-12"
         />
-
         <FilterTabs
           categories={SIZES}
           active={activeFilter}
@@ -62,7 +59,7 @@ export default function ProductGrid() {
           <div className="mt-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
             {[...Array(6)].map((_, i) => (
               <div key={i} className="rounded-2xl bg-beige animate-pulse">
-                <div className="aspect-[4/3] sm:aspect-[3/4]" />
+                <div className="aspect-[3/4]" />
                 <div className="p-3 sm:p-4 space-y-2">
                   <div className="h-3 bg-gold-light rounded w-1/3" />
                   <div className="h-4 bg-gold-light rounded w-2/3" />
