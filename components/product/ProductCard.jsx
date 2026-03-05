@@ -114,7 +114,7 @@ export default function ProductCard({ product }) {
               {added ? '✓ Ajouté !' : 'Panier'}
             </button>
           )}
-        </div>
+        </div>-
       </article>
     </Link>
   )

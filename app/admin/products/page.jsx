@@ -17,9 +17,7 @@ const emptyForm = {
 
 function parseSizeStock(product) {
   const obj = {}
-  if (product.sizes?.length) {
-    product.sizes.forEach(s => { obj[s] = 1 })
-  }
+  if (product.sizes?.length) product.sizes.forEach(s => { obj[s] = 1 })
   return obj
 }
 
@@ -47,18 +45,12 @@ export default function AdminProducts() {
 
   function openEdit(product) {
     setForm({
-      name: product.name,
-      description: product.description ?? '',
-      price: product.price,
-      originalPrice: product.originalPrice ?? '',
-      sizeStock: parseSizeStock(product),
-      colors: product.colors ?? [],
-      tags: product.tags ?? [],
-      active: product.active,
-      images: product.images ?? [],
+      name: product.name, description: product.description ?? '',
+      price: product.price, originalPrice: product.originalPrice ?? '',
+      sizeStock: parseSizeStock(product), colors: product.colors ?? [],
+      tags: product.tags ?? [], active: product.active, images: product.images ?? [],
     })
-    setSelected(product)
-    setModal('edit')
+    setSelected(product); setModal('edit')
   }
 
   function toggleSize(s) {
@@ -106,23 +98,25 @@ export default function AdminProducts() {
       method: 'PUT', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ active: !product.active }),
     })
-    fetchProducts()
+    // Mise à jour immédiate sans recharger
+    setProducts(prev => prev.map(p => p.id === product.id ? { ...p, active: !p.active } : p))
   }
 
-  // ── Marquer comme vendu (stock = 0) ────────────────────────────────────────
+  // Marquer vendu — mise à jour immédiate de la ligne
   async function markSold(product) {
+    setProducts(prev => prev.map(p => p.id === product.id ? { ...p, stock: 0, active: false } : p))
     await fetch(`/api/products/${product.id}`, {
       method: 'PUT', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ stock: 0, active: false }),
     })
-    fetchProducts()
   }
 
-  // ── Suppression réelle ──────────────────────────────────────────────────────
+  // Suppression — retire la ligne immédiatement
   async function handleDelete(product) {
     if (!confirm(`Supprimer définitivement "${product.name}" ?`)) return
+    // Retrait immédiat de l'interface
+    setProducts(prev => prev.filter(p => p.id !== product.id))
     await fetch(`/api/products/${product.id}`, { method: 'DELETE' })
-    fetchProducts()
   }
 
   const inputClass = "w-full border border-gray-200 rounded-lg px-3 py-2 font-sans text-sm text-brown outline-none focus:border-gold transition-colors"
@@ -152,24 +146,26 @@ export default function AdminProducts() {
               {products.map((p) => {
                 const isSold = p.stock === 0
                 return (
-                  <tr key={p.id} className="hover:bg-gray-50/50">
+                  <tr key={p.id} className={`transition-colors ${isSold ? 'bg-red-50/40' : 'hover:bg-gray-50/50'}`}>
                     <td className="px-4 py-3">
                       <div className="w-12 h-14 rounded-lg overflow-hidden bg-beige flex items-center justify-center flex-shrink-0 relative">
-                        {p.images?.[0] ? <Image src={p.images[0]} alt={p.name} width={48} height={56} className="object-cover w-full h-full" /> : <span className="text-xl">👗</span>}
-                        {isSold && <div className="absolute inset-0 bg-black/40 flex items-center justify-center"><span className="text-white text-[0.5rem] font-bold uppercase">Vendu</span></div>}
+                        {p.images?.[0]
+                          ? <Image src={p.images[0]} alt={p.name} width={48} height={56} className={`object-cover w-full h-full ${isSold ? 'grayscale opacity-60' : ''}`} />
+                          : <span className="text-xl">👗</span>}
                       </div>
                     </td>
                     <td className="px-4 py-3">
                       <p className={`font-serif text-sm ${isSold ? 'text-gray-400 line-through' : 'text-brown'}`}>{p.name}</p>
-                      {p.tags?.length > 0 && <span className="text-[0.6rem] uppercase tracking-wider text-gold">{p.tags.join(', ')}</span>}
+                      {isSold && <span className="text-[0.6rem] uppercase tracking-wider text-red-400 font-semibold">🔴 Vendu en boutique</span>}
+                      {!isSold && p.tags?.length > 0 && <span className="text-[0.6rem] uppercase tracking-wider text-gold">{p.tags.join(', ')}</span>}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap gap-1">
-                        {p.sizes?.length > 0 ? p.sizes.map(s => (
+                        {p.sizes?.map(s => (
                           <span key={s} className={`inline-flex items-center justify-center px-2 h-6 rounded font-sans text-xs font-semibold ${isSold ? 'bg-gray-100 text-gray-400 line-through' : 'bg-beige text-brown'}`}>{s}</span>
-                        )) : <span className="text-gray-400 text-xs">—</span>}
-                        <span className={`text-[0.65rem] ml-1 self-center ${isSold ? 'text-red-400 font-semibold' : 'text-gray-400'}`}>
-                          {isSold ? '🔴 Vendu' : `(${p.stock} unité${p.stock > 1 ? 's' : ''})`}
+                        ))}
+                        <span className={`text-[0.65rem] ml-1 self-center ${isSold ? 'text-red-400 font-bold' : 'text-gray-400'}`}>
+                          {isSold ? '0 unité' : `(${p.stock} unité${p.stock > 1 ? 's' : ''})`}
                         </span>
                       </div>
                     </td>
@@ -178,26 +174,28 @@ export default function AdminProducts() {
                       {p.originalPrice && <span className="text-xs text-gray-400 line-through ml-1">{formatPrice(p.originalPrice)}</span>}
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`px-2.5 py-1 rounded-full text-xs font-sans ${isSold ? 'bg-red-100 text-red-600' :
+                      <span className={`px-2.5 py-1 rounded-full text-xs font-sans font-medium ${isSold ? 'bg-red-100 text-red-600' :
                           p.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
                         }`}>
-                        {isSold ? 'Vendu' : p.active ? 'Actif' : 'Masqué'}
+                        {isSold ? '🔴 Vendu' : p.active ? 'Actif' : 'Masqué'}
                       </span>
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        {/* Modifier */}
                         <button onClick={() => openEdit(p)} title="Modifier" className="text-gray-400 hover:text-gold transition-colors"><Pencil size={15} /></button>
-                        {/* Masquer/Afficher */}
-                        <button onClick={() => toggleActive(p)} title={p.active ? 'Masquer' : 'Afficher'} className="text-gray-400 hover:text-blue-500 transition-colors">{p.active ? <EyeOff size={15} /> : <Eye size={15} />}</button>
-                        {/* Marquer vendu */}
+                        <button onClick={() => toggleActive(p)} title={p.active ? 'Masquer' : 'Afficher'} className="text-gray-400 hover:text-blue-500 transition-colors">
+                          {p.active ? <EyeOff size={15} /> : <Eye size={15} />}
+                        </button>
                         {!isSold && (
-                          <button onClick={() => markSold(p)} title="Marquer comme vendu" className="text-gray-400 hover:text-orange-500 transition-colors text-xs font-bold px-1.5 py-0.5 rounded border border-gray-200 hover:border-orange-300">
+                          <button onClick={() => markSold(p)} title="Marquer vendu en boutique"
+                            className="text-[0.65rem] font-bold text-orange-400 hover:text-orange-600 border border-orange-200 hover:border-orange-400 px-1.5 py-0.5 rounded transition-colors">
                             Vendu
                           </button>
                         )}
-                        {/* Supprimer définitivement */}
-                        <button onClick={() => handleDelete(p)} title="Supprimer définitivement" className="text-gray-400 hover:text-red-500 transition-colors"><Trash2 size={15} /></button>
+                        <button onClick={() => handleDelete(p)} title="Supprimer définitivement"
+                          className="text-gray-400 hover:text-red-500 transition-colors">
+                          <Trash2 size={15} />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -213,9 +211,7 @@ export default function AdminProducts() {
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6">
             <h2 className="font-serif text-xl text-brown mb-6">{modal === 'create' ? 'Nouveau produit' : 'Modifier le produit'}</h2>
-
             <div className="space-y-4">
-              {/* Photos */}
               <div>
                 <label className="block font-sans text-xs uppercase tracking-wider text-taupe mb-2">Photos</label>
                 {form.images.length > 0 && (
@@ -234,17 +230,14 @@ export default function AdminProducts() {
                   <Upload size={16} /> {uploading ? 'Upload en cours…' : 'Ajouter des photos'}
                 </button>
               </div>
-
               <div>
                 <label className="block font-sans text-xs uppercase tracking-wider text-taupe mb-1">Nom *</label>
                 <input className={inputClass} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
               </div>
-
               <div>
                 <label className="block font-sans text-xs uppercase tracking-wider text-taupe mb-1">Description</label>
                 <textarea className={inputClass} rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
               </div>
-
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block font-sans text-xs uppercase tracking-wider text-taupe mb-1">Prix (€) *</label>
@@ -255,18 +248,14 @@ export default function AdminProducts() {
                   <input type="number" className={inputClass} value={form.originalPrice} onChange={(e) => setForm({ ...form, originalPrice: e.target.value })} />
                 </div>
               </div>
-
-              {/* Tailles + stock par taille */}
               <div>
                 <label className="block font-sans text-xs uppercase tracking-wider text-taupe mb-2">
-                  Tailles & unités
-                  {totalStock > 0 && <span className="text-gold ml-2">— {totalStock} unité{totalStock > 1 ? 's' : ''} au total</span>}
+                  Tailles & unités {totalStock > 0 && <span className="text-gold ml-1">— {totalStock} unité{totalStock > 1 ? 's' : ''} au total</span>}
                 </label>
                 <div className="flex flex-wrap gap-2 mb-3">
                   {ALL_SIZES.map((s) => (
                     <button key={s} type="button" onClick={() => toggleSize(s)}
-                      className={`w-12 h-10 rounded-lg border font-sans text-xs font-medium transition-all ${selectedSizes.includes(s) ? 'border-gold bg-gold text-white' : 'border-gray-200 text-taupe hover:border-gold'
-                        }`}>
+                      className={`w-12 h-10 rounded-lg border font-sans text-xs font-medium transition-all ${selectedSizes.includes(s) ? 'border-gold bg-gold text-white' : 'border-gray-200 text-taupe hover:border-gold'}`}>
                       {s}
                     </button>
                   ))}
@@ -287,23 +276,19 @@ export default function AdminProducts() {
                   </div>
                 )}
               </div>
-
               <div>
                 <label className="block font-sans text-xs uppercase tracking-wider text-taupe mb-1">Couleurs (séparées par virgule)</label>
                 <input className={inputClass} value={form.colors.join(', ')} onChange={(e) => setForm({ ...form, colors: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })} placeholder="Noir, Blanc, Rose…" />
               </div>
-
               <div>
                 <label className="block font-sans text-xs uppercase tracking-wider text-taupe mb-1">Tags (nouveau, exclusif, promo)</label>
                 <input className={inputClass} value={form.tags.join(', ')} onChange={(e) => setForm({ ...form, tags: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })} />
               </div>
-
               <label className="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" checked={form.active} onChange={(e) => setForm({ ...form, active: e.target.checked })} className="rounded border-gray-300" />
                 <span className="font-sans text-sm text-gray-600">Produit visible sur le site</span>
               </label>
             </div>
-
             <div className="flex gap-3 mt-6 pt-4 border-t border-gray-100">
               <button onClick={() => setModal(false)} className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-lg font-sans text-sm hover:bg-gray-50 transition-colors">Annuler</button>
               <button onClick={handleSave} disabled={saving} className="flex-1 bg-gold text-white py-2.5 rounded-lg font-sans text-sm hover:bg-rose-deep transition-colors disabled:opacity-60">{saving ? 'Sauvegarde…' : 'Sauvegarder'}</button>
