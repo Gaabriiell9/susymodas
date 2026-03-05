@@ -98,11 +98,9 @@ export default function AdminProducts() {
       method: 'PUT', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ active: !product.active }),
     })
-    // Mise à jour immédiate sans recharger
     setProducts(prev => prev.map(p => p.id === product.id ? { ...p, active: !p.active } : p))
   }
 
-  // Marquer vendu — mise à jour immédiate de la ligne
   async function markSold(product) {
     setProducts(prev => prev.map(p => p.id === product.id ? { ...p, stock: 0, active: false } : p))
     await fetch(`/api/products/${product.id}`, {
@@ -111,10 +109,16 @@ export default function AdminProducts() {
     })
   }
 
-  // Suppression — retire la ligne immédiatement
+  async function undoSold(product) {
+    setProducts(prev => prev.map(p => p.id === product.id ? { ...p, stock: 1, active: true } : p))
+    await fetch(`/api/products/${product.id}`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ stock: 1, active: true }),
+    })
+  }
+
   async function handleDelete(product) {
     if (!confirm(`Supprimer définitivement "${product.name}" ?`)) return
-    // Retrait immédiat de l'interface
     setProducts(prev => prev.filter(p => p.id !== product.id))
     await fetch(`/api/products/${product.id}`, { method: 'DELETE' })
   }
@@ -150,7 +154,7 @@ export default function AdminProducts() {
                     <td className="px-4 py-3">
                       <div className="w-12 h-14 rounded-lg overflow-hidden bg-beige flex items-center justify-center flex-shrink-0 relative">
                         {p.images?.[0]
-                          ? <Image src={p.images[0]} alt={p.name} width={48} height={56} className={`object-cover w-full h-full ${isSold ? 'grayscale opacity-60' : ''}`} />
+                          ? <Image src={p.images[0]} alt={p.name} width={48} height={56} className={`object-cover object-top w-full h-full ${isSold ? 'grayscale opacity-60' : ''}`} />
                           : <span className="text-xl">👗</span>}
                       </div>
                     </td>
@@ -186,7 +190,12 @@ export default function AdminProducts() {
                         <button onClick={() => toggleActive(p)} title={p.active ? 'Masquer' : 'Afficher'} className="text-gray-400 hover:text-blue-500 transition-colors">
                           {p.active ? <EyeOff size={15} /> : <Eye size={15} />}
                         </button>
-                        {!isSold && (
+                        {isSold ? (
+                          <button onClick={() => undoSold(p)} title="Annuler vendu"
+                            className="text-[0.65rem] font-bold text-blue-400 hover:text-blue-600 border border-blue-200 hover:border-blue-400 px-1.5 py-0.5 rounded transition-colors">
+                            ↩ Annuler
+                          </button>
+                        ) : (
                           <button onClick={() => markSold(p)} title="Marquer vendu en boutique"
                             className="text-[0.65rem] font-bold text-orange-400 hover:text-orange-600 border border-orange-200 hover:border-orange-400 px-1.5 py-0.5 rounded transition-colors">
                             Vendu
@@ -218,7 +227,7 @@ export default function AdminProducts() {
                   <div className="flex flex-wrap gap-2 mb-3">
                     {form.images.map((url, i) => (
                       <div key={i} className="relative w-20 h-24 rounded-lg overflow-hidden group">
-                        <Image src={url} alt="" fill className="object-cover" />
+                        <Image src={url} alt="" fill className="object-cover object-top" />
                         <button onClick={() => removeImage(url)} className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X size={10} /></button>
                       </div>
                     ))}
