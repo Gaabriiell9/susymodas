@@ -35,7 +35,7 @@ export default function ProductPageClient({ product }) {
 
     return (
         <div className="min-h-screen bg-cream">
-            <div className="mx-auto max-w-7xl px-4 sm:px-10 py-8">
+            <div className="mx-auto max-w-7xl px-4 sm:px-10 py-4 sm:py-8">
 
                 {/* Breadcrumb */}
                 <Link href="/" className="inline-flex items-center gap-1.5 text-taupe hover:text-gold transition-colors font-sans text-xs uppercase tracking-wider mb-8">
@@ -43,7 +43,7 @@ export default function ProductPageClient({ product }) {
                     Retour à la boutique
                 </Link>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
+                <div className="grid grid-cols-2 gap-3 sm:gap-10 lg:gap-16">
 
                     {/* ── Photos ── */}
                     <div className="space-y-3">
@@ -100,7 +100,7 @@ export default function ProductPageClient({ product }) {
                     <div className="flex flex-col">
 
                         <p className="section-label mb-2">{product.category}</p>
-                        <h1 className="font-serif text-3xl sm:text-4xl text-brown font-light leading-tight mb-3">
+                        <h1 className="font-serif text-lg sm:text-3xl text-brown font-light leading-tight mb-3">
                             {product.name}
                         </h1>
 
@@ -110,7 +110,7 @@ export default function ProductPageClient({ product }) {
                         </div>
 
                         <div className="flex items-baseline gap-3 mb-6">
-                            <span className="font-serif text-3xl text-brown font-semibold">
+                            <span className="font-serif text-xl sm:text-3xl text-brown font-semibold">
                                 {formatPrice(product.price)}
                             </span>
                             {product.originalPrice && (
@@ -121,7 +121,7 @@ export default function ProductPageClient({ product }) {
                         </div>
 
                         {product.description && (
-                            <p className="font-sans text-brown-light leading-relaxed text-sm mb-6 border-t border-beige pt-6">
+                            <p className="hidden sm:block font-sans text-brown-light leading-relaxed text-sm mb-6 border-t border-beige pt-6">
                                 {product.description}
                             </p>
                         )}
@@ -138,7 +138,7 @@ export default function ProductPageClient({ product }) {
                                             key={color}
                                             onClick={() => setSelectedColor(color)}
                                             className={cn(
-                                                'px-4 py-1.5 rounded-full border font-sans text-xs transition-all',
+                                                'px-2 py-1 sm:px-4 sm:py-1.5 rounded-full border font-sans text-xs transition-all',
                                                 selectedColor === color
                                                     ? 'border-gold bg-gold text-white'
                                                     : 'border-gold-light text-taupe hover:border-gold'
@@ -163,7 +163,7 @@ export default function ProductPageClient({ product }) {
                                             key={size}
                                             onClick={() => setSelectedSize(size)}
                                             className={cn(
-                                                'w-12 h-10 rounded-lg border font-sans text-xs font-medium transition-all',
+                                                'w-8 h-8 sm:w-12 sm:h-10 rounded-lg border font-sans text-xs font-medium transition-all',
                                                 selectedSize === size
                                                     ? 'border-gold bg-gold text-white'
                                                     : 'border-gold-light text-taupe hover:border-gold'
@@ -190,7 +190,7 @@ export default function ProductPageClient({ product }) {
                         </div>
 
                         {/* Infos livraison */}
-                        <div className="mt-4 grid grid-cols-2 gap-3">
+                        <div className="hidden sm:grid mt-4 grid-cols-2 gap-3">
                             {[
                                 { icon: '📦', label: 'Livraison Guyane' },
                                 { icon: '💬', label: 'Commande WhatsApp' },
