@@ -1,65 +1,48 @@
-// app/api/products/[id]/route.js
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
-import { getAdminFromCookies } from '@/lib/auth'
 
-// ── GET /api/products/:id ─────────────────────────────────────────────────────
-export async function GET(_, { params }) {
+export const dynamic = 'force-dynamic'
+
+export async function GET(request, { params }) {
   try {
-    const product = await prisma.product.findUnique({
-      where: { id: parseInt(params.id) },
-    })
+    const product = await prisma.product.findUnique({ where: { id: params.id } })
     if (!product) return NextResponse.json({ error: 'Produit introuvable' }, { status: 404 })
     return NextResponse.json({ product })
   } catch (error) {
-    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
 
-// ── PUT /api/products/:id ─────────────────────────────────────────────────────
 export async function PUT(request, { params }) {
-  const admin = await getAdminFromCookies()
-  if (!admin) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
-
   try {
     const body = await request.json()
+    const data = {}
 
-    const product = await prisma.product.update({
-      where: { id: parseInt(params.id) },
-      data: {
-        ...(body.name          && { name: body.name }),
-        ...(body.description   !== undefined && { description: body.description }),
-        ...(body.price         && { price: parseFloat(body.price) }),
-        ...(body.originalPrice !== undefined && { originalPrice: body.originalPrice ? parseFloat(body.originalPrice) : null }),
-        ...(body.category      && { category: body.category }),
-        ...(body.tags          && { tags: body.tags }),
-        ...(body.images        && { images: body.images }),
-        ...(body.sizes         && { sizes: body.sizes }),
-        ...(body.colors        && { colors: body.colors }),
-        ...(body.stock         !== undefined && { stock: parseInt(body.stock) }),
-        ...(body.active        !== undefined && { active: body.active }),
-      },
-    })
+    if (body.name !== undefined) data.name = body.name
+    if (body.description !== undefined) data.description = body.description
+    if (body.price !== undefined) data.price = parseFloat(body.price)
+    if (body.originalPrice !== undefined) data.originalPrice = body.originalPrice ? parseFloat(body.originalPrice) : null
+    if (body.category !== undefined) data.category = body.category
+    if (body.sizes !== undefined) data.sizes = body.sizes
+    if (body.colors !== undefined) data.colors = body.colors
+    if (body.tags !== undefined) data.tags = body.tags
+    if (body.stock !== undefined) data.stock = parseInt(body.stock)
+    if (body.active !== undefined) data.active = body.active
+    if (body.images !== undefined) data.images = body.images
 
+    const product = await prisma.product.update({ where: { id: params.id }, data })
     return NextResponse.json({ product })
   } catch (error) {
-    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
 
-// ── DELETE /api/products/:id ──────────────────────────────────────────────────
-export async function DELETE(_, { params }) {
-  const admin = await getAdminFromCookies()
-  if (!admin) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
-
+export async function DELETE(request, { params }) {
   try {
-    // Soft delete — désactive le produit au lieu de le supprimer
-    await prisma.product.update({
-      where: { id: parseInt(params.id) },
-      data:  { active: false },
-    })
+    // Suppression définitive
+    await prisma.product.delete({ where: { id: params.id } })
     return NextResponse.json({ success: true })
   } catch (error) {
-    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }

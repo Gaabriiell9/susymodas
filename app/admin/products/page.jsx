@@ -12,12 +12,10 @@ const ALL_SIZES = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL']
 
 const emptyForm = {
   name: '', description: '', price: '', originalPrice: '',
-  sizeStock: {}, // { S: 2, M: 1, XL: 3 }
-  colors: [], tags: [], active: true, images: [],
+  sizeStock: {}, colors: [], tags: [], active: true, images: [],
 }
 
 function parseSizeStock(product) {
-  // Reconstruit sizeStock depuis sizes[] et stock total
   const obj = {}
   if (product.sizes?.length) {
     product.sizes.forEach(s => { obj[s] = 1 })
@@ -45,11 +43,7 @@ export default function AdminProducts() {
     setLoading(false)
   }
 
-  function openCreate() {
-    setForm(emptyForm)
-    setSelected(null)
-    setModal('create')
-  }
+  function openCreate() { setForm(emptyForm); setSelected(null); setModal('create') }
 
   function openEdit(product) {
     setForm({
@@ -69,11 +63,7 @@ export default function AdminProducts() {
 
   function toggleSize(s) {
     const current = { ...form.sizeStock }
-    if (current[s] !== undefined) {
-      delete current[s]
-    } else {
-      current[s] = 1
-    }
+    if (current[s] !== undefined) { delete current[s] } else { current[s] = 1 }
     setForm({ ...form, sizeStock: current })
   }
 
@@ -86,16 +76,11 @@ export default function AdminProducts() {
     if (!files.length) return
     setUploading(true)
     try {
-      const slug = form.name
-        ? form.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
-        : `product-${Date.now()}`
+      const slug = form.name ? form.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') : `product-${Date.now()}`
       const urls = await Promise.all(files.map((f) => uploadProductImage(f, slug)))
       setForm((prev) => ({ ...prev, images: [...prev.images, ...urls] }))
-    } catch (err) {
-      alert('Erreur upload : ' + err.message)
-    } finally {
-      setUploading(false)
-    }
+    } catch (err) { alert('Erreur upload : ' + err.message) }
+    finally { setUploading(false) }
   }
 
   async function removeImage(url) {
@@ -107,22 +92,13 @@ export default function AdminProducts() {
     setSaving(true)
     const sizes = Object.keys(form.sizeStock)
     const stock = Object.values(form.sizeStock).reduce((a, b) => a + b, 0)
-
     const url = modal === 'edit' ? `/api/products/${selected.id}` : '/api/products'
     const method = modal === 'edit' ? 'PUT' : 'POST'
     await fetch(url, {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        ...form,
-        sizes,
-        stock,
-        category: sizes[0] ?? 'unique',
-      }),
+      method, headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...form, sizes, stock, category: sizes[0] ?? 'unique' }),
     })
-    setModal(false)
-    setSaving(false)
-    fetchProducts()
+    setModal(false); setSaving(false); fetchProducts()
   }
 
   async function toggleActive(product) {
@@ -133,9 +109,19 @@ export default function AdminProducts() {
     fetchProducts()
   }
 
-  async function handleDelete(id) {
-    if (!confirm('Supprimer ce produit ?')) return
-    await fetch(`/api/products/${id}`, { method: 'DELETE' })
+  // ── Marquer comme vendu (stock = 0) ────────────────────────────────────────
+  async function markSold(product) {
+    await fetch(`/api/products/${product.id}`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ stock: 0, active: false }),
+    })
+    fetchProducts()
+  }
+
+  // ── Suppression réelle ──────────────────────────────────────────────────────
+  async function handleDelete(product) {
+    if (!confirm(`Supprimer définitivement "${product.name}" ?`)) return
+    await fetch(`/api/products/${product.id}`, { method: 'DELETE' })
     fetchProducts()
   }
 
@@ -153,9 +139,7 @@ export default function AdminProducts() {
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        {loading ? (
-          <p className="p-8 text-center text-gray-400 font-sans text-sm">Chargement…</p>
-        ) : (
+        {loading ? <p className="p-8 text-center text-gray-400 font-sans text-sm">Chargement…</p> : (
           <table className="w-full">
             <thead className="bg-gray-50 text-left">
               <tr>
@@ -165,45 +149,60 @@ export default function AdminProducts() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {products.map((p) => (
-                <tr key={p.id} className="hover:bg-gray-50/50">
-                  <td className="px-4 py-3">
-                    <div className="w-12 h-14 rounded-lg overflow-hidden bg-beige flex items-center justify-center flex-shrink-0">
-                      {p.images?.[0] ? (
-                        <Image src={p.images[0]} alt={p.name} width={48} height={56} className="object-cover w-full h-full" />
-                      ) : <span className="text-xl">👗</span>}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <p className="font-serif text-sm text-brown">{p.name}</p>
-                    {p.tags?.length > 0 && <span className="text-[0.6rem] uppercase tracking-wider text-gold">{p.tags.join(', ')}</span>}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex flex-wrap gap-1">
-                      {p.sizes?.length > 0 ? p.sizes.map(s => (
-                        <span key={s} className="inline-flex items-center justify-center px-2 h-6 bg-beige rounded font-sans text-xs font-semibold text-brown">{s}</span>
-                      )) : <span className="text-gray-400 text-xs">—</span>}
-                      <span className="text-[0.65rem] text-gray-400 ml-1 self-center">({p.stock} unité{p.stock > 1 ? 's' : ''})</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className="font-sans text-sm font-medium">{formatPrice(p.price)}</span>
-                    {p.originalPrice && <span className="text-xs text-gray-400 line-through ml-1">{formatPrice(p.originalPrice)}</span>}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={`px-2.5 py-1 rounded-full text-xs font-sans ${p.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                      {p.active ? 'Actif' : 'Masqué'}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <button onClick={() => openEdit(p)} className="text-gray-400 hover:text-gold transition-colors"><Pencil size={15} /></button>
-                      <button onClick={() => toggleActive(p)} className="text-gray-400 hover:text-blue-500 transition-colors">{p.active ? <EyeOff size={15} /> : <Eye size={15} />}</button>
-                      <button onClick={() => handleDelete(p.id)} className="text-gray-400 hover:text-red-500 transition-colors"><Trash2 size={15} /></button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              {products.map((p) => {
+                const isSold = p.stock === 0
+                return (
+                  <tr key={p.id} className="hover:bg-gray-50/50">
+                    <td className="px-4 py-3">
+                      <div className="w-12 h-14 rounded-lg overflow-hidden bg-beige flex items-center justify-center flex-shrink-0 relative">
+                        {p.images?.[0] ? <Image src={p.images[0]} alt={p.name} width={48} height={56} className="object-cover w-full h-full" /> : <span className="text-xl">👗</span>}
+                        {isSold && <div className="absolute inset-0 bg-black/40 flex items-center justify-center"><span className="text-white text-[0.5rem] font-bold uppercase">Vendu</span></div>}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <p className={`font-serif text-sm ${isSold ? 'text-gray-400 line-through' : 'text-brown'}`}>{p.name}</p>
+                      {p.tags?.length > 0 && <span className="text-[0.6rem] uppercase tracking-wider text-gold">{p.tags.join(', ')}</span>}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex flex-wrap gap-1">
+                        {p.sizes?.length > 0 ? p.sizes.map(s => (
+                          <span key={s} className={`inline-flex items-center justify-center px-2 h-6 rounded font-sans text-xs font-semibold ${isSold ? 'bg-gray-100 text-gray-400 line-through' : 'bg-beige text-brown'}`}>{s}</span>
+                        )) : <span className="text-gray-400 text-xs">—</span>}
+                        <span className={`text-[0.65rem] ml-1 self-center ${isSold ? 'text-red-400 font-semibold' : 'text-gray-400'}`}>
+                          {isSold ? '🔴 Vendu' : `(${p.stock} unité${p.stock > 1 ? 's' : ''})`}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="font-sans text-sm font-medium">{formatPrice(p.price)}</span>
+                      {p.originalPrice && <span className="text-xs text-gray-400 line-through ml-1">{formatPrice(p.originalPrice)}</span>}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`px-2.5 py-1 rounded-full text-xs font-sans ${isSold ? 'bg-red-100 text-red-600' :
+                          p.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
+                        }`}>
+                        {isSold ? 'Vendu' : p.active ? 'Actif' : 'Masqué'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        {/* Modifier */}
+                        <button onClick={() => openEdit(p)} title="Modifier" className="text-gray-400 hover:text-gold transition-colors"><Pencil size={15} /></button>
+                        {/* Masquer/Afficher */}
+                        <button onClick={() => toggleActive(p)} title={p.active ? 'Masquer' : 'Afficher'} className="text-gray-400 hover:text-blue-500 transition-colors">{p.active ? <EyeOff size={15} /> : <Eye size={15} />}</button>
+                        {/* Marquer vendu */}
+                        {!isSold && (
+                          <button onClick={() => markSold(p)} title="Marquer comme vendu" className="text-gray-400 hover:text-orange-500 transition-colors text-xs font-bold px-1.5 py-0.5 rounded border border-gray-200 hover:border-orange-300">
+                            Vendu
+                          </button>
+                        )}
+                        {/* Supprimer définitivement */}
+                        <button onClick={() => handleDelete(p)} title="Supprimer définitivement" className="text-gray-400 hover:text-red-500 transition-colors"><Trash2 size={15} /></button>
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         )}
@@ -213,12 +212,9 @@ export default function AdminProducts() {
       {modal && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6">
-            <h2 className="font-serif text-xl text-brown mb-6">
-              {modal === 'create' ? 'Nouveau produit' : 'Modifier le produit'}
-            </h2>
+            <h2 className="font-serif text-xl text-brown mb-6">{modal === 'create' ? 'Nouveau produit' : 'Modifier le produit'}</h2>
 
             <div className="space-y-4">
-
               {/* Photos */}
               <div>
                 <label className="block font-sans text-xs uppercase tracking-wider text-taupe mb-2">Photos</label>
@@ -227,10 +223,7 @@ export default function AdminProducts() {
                     {form.images.map((url, i) => (
                       <div key={i} className="relative w-20 h-24 rounded-lg overflow-hidden group">
                         <Image src={url} alt="" fill className="object-cover" />
-                        <button onClick={() => removeImage(url)}
-                          className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                          <X size={10} />
-                        </button>
+                        <button onClick={() => removeImage(url)} className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X size={10} /></button>
                       </div>
                     ))}
                   </div>
@@ -238,24 +231,20 @@ export default function AdminProducts() {
                 <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={handleImageUpload} />
                 <button onClick={() => fileRef.current?.click()} disabled={uploading}
                   className="flex items-center gap-2 border border-dashed border-gold-light rounded-lg px-4 py-3 text-taupe hover:border-gold hover:text-gold transition-colors font-sans text-sm w-full justify-center">
-                  <Upload size={16} />
-                  {uploading ? 'Upload en cours…' : 'Ajouter des photos'}
+                  <Upload size={16} /> {uploading ? 'Upload en cours…' : 'Ajouter des photos'}
                 </button>
               </div>
 
-              {/* Nom */}
               <div>
                 <label className="block font-sans text-xs uppercase tracking-wider text-taupe mb-1">Nom *</label>
                 <input className={inputClass} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
               </div>
 
-              {/* Description */}
               <div>
                 <label className="block font-sans text-xs uppercase tracking-wider text-taupe mb-1">Description</label>
                 <textarea className={inputClass} rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
               </div>
 
-              {/* Prix */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block font-sans text-xs uppercase tracking-wider text-taupe mb-1">Prix (€) *</label>
@@ -273,21 +262,15 @@ export default function AdminProducts() {
                   Tailles & unités
                   {totalStock > 0 && <span className="text-gold ml-2">— {totalStock} unité{totalStock > 1 ? 's' : ''} au total</span>}
                 </label>
-
-                {/* Boutons tailles */}
                 <div className="flex flex-wrap gap-2 mb-3">
                   {ALL_SIZES.map((s) => (
                     <button key={s} type="button" onClick={() => toggleSize(s)}
-                      className={`w-12 h-10 rounded-lg border font-sans text-xs font-medium transition-all ${selectedSizes.includes(s)
-                          ? 'border-gold bg-gold text-white'
-                          : 'border-gray-200 text-taupe hover:border-gold'
+                      className={`w-12 h-10 rounded-lg border font-sans text-xs font-medium transition-all ${selectedSizes.includes(s) ? 'border-gold bg-gold text-white' : 'border-gray-200 text-taupe hover:border-gold'
                         }`}>
                       {s}
                     </button>
                   ))}
                 </div>
-
-                {/* Stock par taille sélectionnée */}
                 {selectedSizes.length > 0 && (
                   <div className="bg-beige/40 rounded-xl p-3 space-y-2">
                     <p className="font-sans text-[0.65rem] uppercase tracking-wider text-taupe">Unités par taille</p>
@@ -295,11 +278,9 @@ export default function AdminProducts() {
                       <div key={s} className="flex items-center justify-between">
                         <span className="font-sans text-sm font-semibold text-brown w-12">{s}</span>
                         <div className="flex items-center gap-2">
-                          <button type="button" onClick={() => setStock(s, form.sizeStock[s] - 1)}
-                            className="w-7 h-7 rounded-lg bg-white border border-gray-200 text-brown hover:border-gold transition-colors text-sm font-bold">−</button>
+                          <button type="button" onClick={() => setStock(s, form.sizeStock[s] - 1)} className="w-7 h-7 rounded-lg bg-white border border-gray-200 text-brown hover:border-gold transition-colors text-sm font-bold">−</button>
                           <span className="font-sans text-sm font-semibold text-brown w-6 text-center">{form.sizeStock[s]}</span>
-                          <button type="button" onClick={() => setStock(s, form.sizeStock[s] + 1)}
-                            className="w-7 h-7 rounded-lg bg-white border border-gray-200 text-brown hover:border-gold transition-colors text-sm font-bold">+</button>
+                          <button type="button" onClick={() => setStock(s, form.sizeStock[s] + 1)} className="w-7 h-7 rounded-lg bg-white border border-gray-200 text-brown hover:border-gold transition-colors text-sm font-bold">+</button>
                         </div>
                       </div>
                     ))}
@@ -307,19 +288,16 @@ export default function AdminProducts() {
                 )}
               </div>
 
-              {/* Couleurs */}
               <div>
                 <label className="block font-sans text-xs uppercase tracking-wider text-taupe mb-1">Couleurs (séparées par virgule)</label>
                 <input className={inputClass} value={form.colors.join(', ')} onChange={(e) => setForm({ ...form, colors: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })} placeholder="Noir, Blanc, Rose…" />
               </div>
 
-              {/* Tags */}
               <div>
                 <label className="block font-sans text-xs uppercase tracking-wider text-taupe mb-1">Tags (nouveau, exclusif, promo)</label>
                 <input className={inputClass} value={form.tags.join(', ')} onChange={(e) => setForm({ ...form, tags: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })} />
               </div>
 
-              {/* Visible */}
               <label className="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" checked={form.active} onChange={(e) => setForm({ ...form, active: e.target.checked })} className="rounded border-gray-300" />
                 <span className="font-sans text-sm text-gray-600">Produit visible sur le site</span>
@@ -327,12 +305,8 @@ export default function AdminProducts() {
             </div>
 
             <div className="flex gap-3 mt-6 pt-4 border-t border-gray-100">
-              <button onClick={() => setModal(false)} className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-lg font-sans text-sm hover:bg-gray-50 transition-colors">
-                Annuler
-              </button>
-              <button onClick={handleSave} disabled={saving} className="flex-1 bg-gold text-white py-2.5 rounded-lg font-sans text-sm hover:bg-rose-deep transition-colors disabled:opacity-60">
-                {saving ? 'Sauvegarde…' : 'Sauvegarder'}
-              </button>
+              <button onClick={() => setModal(false)} className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-lg font-sans text-sm hover:bg-gray-50 transition-colors">Annuler</button>
+              <button onClick={handleSave} disabled={saving} className="flex-1 bg-gold text-white py-2.5 rounded-lg font-sans text-sm hover:bg-rose-deep transition-colors disabled:opacity-60">{saving ? 'Sauvegarde…' : 'Sauvegarder'}</button>
             </div>
           </div>
         </div>
