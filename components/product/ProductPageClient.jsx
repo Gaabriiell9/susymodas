@@ -149,6 +149,7 @@ export default function ProductPageClient({ product }) {
                             {[
                                 { icon: '📦', label: 'Livraison Guyane' },
                                 { icon: '🏪', label: 'Retrait boutique' },
+                                { icon: '✂', label: 'Retouches possibles' },
                                 { icon: '🔒', label: 'Paiement sécurisé' },
                             ].map(item => (
                                 <div key={item.label} className="flex items-center gap-2 bg-beige/50 rounded-lg px-3 py-2">
