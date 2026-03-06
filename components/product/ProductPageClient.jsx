@@ -10,7 +10,7 @@ import Stars from '@/components/ui/Stars'
 
 export default function ProductPageClient({ product }) {
     const router = useRouter()
-    const { addItem, openCart } = useCart()
+    const { addItem } = useCart()
     const [selectedSize, setSelectedSize] = useState(product.sizes?.[0] ?? null)
     const [selectedColor, setSelectedColor] = useState(product.colors?.[0] ?? null)
     const [selectedImage, setSelectedImage] = useState(0)
@@ -20,7 +20,6 @@ export default function ProductPageClient({ product }) {
     function handleAdd() {
         addItem({ id: product.id, name: product.name, price: product.price, size: selectedSize, color: selectedColor, images: product.images })
         setAdded(true)
-        openCart()
         setTimeout(() => setAdded(false), 2000)
     }
 
@@ -150,7 +149,6 @@ export default function ProductPageClient({ product }) {
                             {[
                                 { icon: '📦', label: 'Livraison Guyane' },
                                 { icon: '🏪', label: 'Retrait boutique' },
-                                { icon: '✂', label: 'Retouches possibles' },
                                 { icon: '🔒', label: 'Paiement sécurisé' },
                             ].map(item => (
                                 <div key={item.label} className="flex items-center gap-2 bg-beige/50 rounded-lg px-3 py-2">
