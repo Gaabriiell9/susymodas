@@ -29,7 +29,7 @@ export default function Hero() {
           </h1>
 
           <p className="font-sans text-brown-light leading-relaxed max-w-md mb-8 text-[0.95rem]">
-            Des robes conçues pour la femme moderne qui honore Dieu à travers sa mise — modestes, raffinées et sublimes pour chaque occasion.
+            Des robes conçues pour la femme moderne qui honore Dieu à travers sa mise, modestes, raffinées et sublimes pour chaque occasion.
           </p>
 
           <div className="flex flex-wrap gap-3">
