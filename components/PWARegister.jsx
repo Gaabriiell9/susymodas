@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import { X, Download, Share } from 'lucide-react'
 
 export default function PWAInstallBanner() {
@@ -9,14 +10,10 @@ export default function PWAInstallBanner() {
     const [deferredPrompt, setDeferredPrompt] = useState(null)
 
     useEffect(() => {
-        // Déjà installée ou déjà refusée ?
         const dismissed = localStorage.getItem('pwa_dismissed')
         if (dismissed) return
-
-        // Déjà en mode standalone (installée) ?
         if (window.matchMedia('(display-mode: standalone)').matches) return
 
-        // iOS detection
         const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream
         setIsIOS(ios)
 
@@ -25,7 +22,6 @@ export default function PWAInstallBanner() {
             return
         }
 
-        // Android / Chrome : écoute l'événement beforeinstallprompt
         const handler = (e) => {
             e.preventDefault()
             setDeferredPrompt(e)
@@ -53,19 +49,20 @@ export default function PWAInstallBanner() {
     return (
         <div className="fixed bottom-4 left-4 right-4 z-[100] mx-auto max-w-sm">
             <div className="bg-white rounded-2xl shadow-2xl border border-gold-light p-4 flex gap-3 items-start">
-                {/* Logo */}
-                <img src="/logo-susy.png" alt="Susy Modas" className="w-12 h-12 rounded-xl flex-shrink-0 object-cover" />
+                <div className="relative w-12 h-12 rounded-xl flex-shrink-0 overflow-hidden">
+                    <Image src="/logo-susy.png" alt="Susy Modas" fill className="object-cover" />
+                </div>
 
                 <div className="flex-1 min-w-0">
                     <p className="font-serif text-sm text-brown font-medium">Installer Susy Modas</p>
 
                     {isIOS ? (
                         <p className="font-sans text-xs text-taupe mt-1 leading-relaxed">
-                            Appuyez sur <Share size={11} className="inline" /> puis <strong>"Sur l'écran d'accueil"</strong> pour installer l'app.
+                            Appuyez sur <Share size={11} className="inline" /> puis <strong>Sur l&apos;écran d&apos;accueil</strong> pour installer l&apos;app.
                         </p>
                     ) : (
                         <p className="font-sans text-xs text-taupe mt-1 leading-relaxed">
-                            Ajoutez l'app sur votre téléphone pour un accès rapide.
+                            Ajoutez l&apos;app sur votre téléphone pour un accès rapide.
                         </p>
                     )}
 
