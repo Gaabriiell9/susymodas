@@ -5,6 +5,7 @@ import FilterTabs from '@/components/product/FilterTabs'
 import ProductCard from '@/components/product/ProductCard'
 import SectionHeader from '@/components/ui/SectionHeader'
 import Button from '@/components/ui/Button'
+import Link from 'next/link'
 
 const SIZES = [
   { id: 'all', label: 'Tout voir' },
@@ -83,9 +84,11 @@ export default function ProductGrid() {
         )}
 
         <div className="text-center mt-12">
-          <Button variant="outline" size="lg">
-            Voir toute la collection →
-          </Button>
+          <Link href="/collection">
+            <Button variant="outline" size="lg">
+              Voir toute la collection →
+            </Button>
+          </Link>
         </div>
       </div>
     </section>
