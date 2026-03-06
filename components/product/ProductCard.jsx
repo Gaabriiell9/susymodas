@@ -96,7 +96,9 @@ export default function ProductCard({ product }) {
 
         {/* Infos */}
         <div className="p-3 sm:p-4">
-          <p className="font-sans text-[0.6rem] tracking-[0.1em] uppercase text-taupe mb-0.5">{product.sizes?.[0] ?? product.category}</p>
+          <p className="font-sans text-[0.6rem] tracking-[0.1em] uppercase text-taupe mb-0.5">
+            {product.sizes?.join(' · ') ?? product.category}
+          </p>
           <h3 className={cn('font-serif text-sm sm:text-base leading-snug', isSold ? 'text-gray-400' : 'text-brown')}>{product.name}</h3>
 
           <div className="flex items-center justify-between mt-1.5 sm:mt-2">
