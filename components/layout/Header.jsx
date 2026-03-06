@@ -6,15 +6,17 @@ import Image from 'next/image'
 import Logo from '@/components/ui/Logo'
 import { useCart } from '@/context/CartContext'
 import { useWishlist } from '@/context/WishlistContext'
-import { ShoppingBag, Search, Heart, X } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { formatPrice } from '@/lib/utils'
+import { ShoppingBag, Search, Heart, X, User, LogOut } from 'lucide-react'
+import { cn, formatPrice } from '@/lib/utils'
+import { useSession, signOut } from 'next-auth/react'
 
 export default function Header() {
   const { itemCount, toggleCart } = useCart()
   const { wishlistCount } = useWishlist()
+  const { data: session } = useSession()
   const [scrolled, setScrolled] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
+  const [userMenu, setUserMenu] = useState(false)
   const [query, setQuery] = useState('')
   const [results, setResults] = useState([])
   const [searching, setSearching] = useState(false)
@@ -38,52 +40,74 @@ export default function Header() {
         const res = await fetch('/api/products')
         const data = await res.json()
         const q = query.toLowerCase()
-        const filtered = (data.products ?? []).filter(p =>
-          p.name.toLowerCase().includes(q)
-        )
-        setResults(filtered.slice(0, 6))
+        setResults((data.products ?? []).filter(p => p.name.toLowerCase().includes(q)).slice(0, 6))
       } catch { setResults([]) }
       finally { setSearching(false) }
     }, 300)
     return () => clearTimeout(timer)
   }, [query])
 
-  function close() {
-    setSearchOpen(false)
-    setQuery('')
-    setResults([])
-  }
+  function closeSearch() { setSearchOpen(false); setQuery(''); setResults([]) }
 
   return (
     <>
       <header className={cn('sticky top-0 z-50 bg-white transition-shadow duration-300', scrolled ? 'shadow-sm' : 'border-b border-gold-light')}>
         <div className="mx-auto max-w-7xl px-4 sm:px-10 flex items-center justify-between h-16 sm:h-20">
-
           <Logo />
 
-          {/* Actions */}
           <div className="flex items-center gap-3 sm:gap-4">
+            {/* Recherche */}
             <button onClick={() => setSearchOpen(true)} className="text-brown-light hover:text-gold transition-colors" aria-label="Rechercher">
               <Search size={20} strokeWidth={1.5} />
             </button>
 
+            {/* Favoris */}
             <Link href="/favoris" className="relative text-brown-light hover:text-gold transition-colors" aria-label="Favoris">
               <Heart size={20} strokeWidth={1.5} />
               {wishlistCount > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-gold text-[0.55rem] font-medium text-white">
-                  {wishlistCount}
-                </span>
+                <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-gold text-[0.55rem] font-medium text-white">{wishlistCount}</span>
               )}
             </Link>
 
+            {/* Panier */}
             <button onClick={toggleCart} className="relative text-brown-light hover:text-gold transition-colors" aria-label="Panier">
               <ShoppingBag size={20} strokeWidth={1.5} />
               {itemCount > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-rose-deep text-[0.55rem] font-medium text-white">
-                  {itemCount}
-                </span>
+                <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-rose-deep text-[0.55rem] font-medium text-white">{itemCount}</span>
               )}
             </button>
+
+            {/* Compte */}
+            {session ? (
+              <div className="relative">
+                <button onClick={() => setUserMenu(v => !v)}
+                  className="flex items-center gap-1.5 text-brown-light hover:text-gold transition-colors">
+                  {session.user.image
+                    ? <Image src={session.user.image} alt="" width={28} height={28} className="rounded-full object-cover" />
+                    : <div className="w-7 h-7 rounded-full bg-gold/20 flex items-center justify-center">
+                      <User size={14} className="text-gold" />
+                    </div>
+                  }
+                </button>
+                {userMenu && (
+                  <div className="absolute right-0 top-10 bg-white rounded-xl shadow-lg border border-gray-100 py-2 w-48 z-50">
+                    <p className="px-4 py-2 font-sans text-xs text-taupe border-b border-gray-100 truncate">{session.user.email}</p>
+                    <Link href="/compte/commandes" onClick={() => setUserMenu(false)}
+                      className="flex items-center gap-2 px-4 py-2.5 font-sans text-sm text-brown hover:bg-beige/50 transition-colors">
+                      Mes commandes
+                    </Link>
+                    <button onClick={() => { setUserMenu(false); signOut({ callbackUrl: '/' }) }}
+                      className="flex items-center gap-2 px-4 py-2.5 font-sans text-sm text-red-500 hover:bg-red-50 transition-colors w-full text-left">
+                      <LogOut size={14} /> Se déconnecter
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Link href="/connexion" className="text-brown-light hover:text-gold transition-colors" aria-label="Mon compte">
+                <User size={20} strokeWidth={1.5} />
+              </Link>
+            )}
           </div>
         </div>
       </header>
@@ -91,26 +115,15 @@ export default function Header() {
       {/* Overlay recherche */}
       {searchOpen && (
         <div className="fixed inset-0 z-[60] flex flex-col">
-          {/* Fond sombre */}
-          <div className="absolute inset-0 bg-black/40" onClick={close} />
-
-          {/* Panneau */}
+          <div className="absolute inset-0 bg-black/40" onClick={closeSearch} />
           <div className="relative z-10 bg-white shadow-2xl">
             <div className="mx-auto max-w-2xl px-4 py-4 flex items-center gap-3">
               <Search size={18} className="text-gold flex-shrink-0" />
-              <input
-                ref={inputRef}
-                value={query}
-                onChange={e => setQuery(e.target.value)}
+              <input ref={inputRef} value={query} onChange={e => setQuery(e.target.value)}
                 placeholder="Rechercher une robe…"
-                className="flex-1 font-sans text-base text-brown outline-none placeholder:text-taupe bg-transparent"
-              />
-              <button onClick={close} className="text-brown-light hover:text-gold transition-colors">
-                <X size={20} />
-              </button>
+                className="flex-1 font-sans text-base text-brown outline-none placeholder:text-taupe bg-transparent" />
+              <button onClick={closeSearch} className="text-brown-light hover:text-gold transition-colors"><X size={20} /></button>
             </div>
-
-            {/* Résultats */}
             {query.trim() && (
               <div className="mx-auto max-w-2xl px-4 pb-4 border-t border-gray-100">
                 {searching ? (
@@ -121,7 +134,7 @@ export default function Header() {
                   <ul className="divide-y divide-gray-50">
                     {results.map(p => (
                       <li key={p.id}>
-                        <Link href={`/produit/${p.slug}`} onClick={close}
+                        <Link href={`/produit/${p.slug}`} onClick={closeSearch}
                           className="flex items-center gap-4 py-3 hover:bg-beige/30 rounded-xl px-2 transition-colors">
                           <div className="w-12 h-14 rounded-lg overflow-hidden bg-beige flex-shrink-0 relative">
                             {p.images?.[0]

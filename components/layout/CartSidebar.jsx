@@ -1,16 +1,18 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { X, Minus, Plus, Trash2, CreditCard, Store } from 'lucide-react'
+import { X, Trash2, CreditCard, Store } from 'lucide-react'
 import { useCart } from '@/context/CartContext'
 import { formatPrice } from '@/lib/utils'
 import Button from '@/components/ui/Button'
+import { useSession, signIn } from 'next-auth/react'
 
 export default function CartSidebar() {
-  const { isOpen, items, total, closeCart, updateQty, removeItem, clearCart } = useCart()
+  const { isOpen, items, total, closeCart, updateQty, removeItem } = useCart()
+  const { data: session } = useSession()
   const [step, setStep] = useState('cart')
   const [saving, setSaving] = useState(false)
-  const [delivery, setDelivery] = useState('retrait') // 'retrait' | 'livraison'
+  const [delivery, setDelivery] = useState('retrait')
   const [form, setForm] = useState({ firstName: '', lastName: '', email: '', phone: '', address: '', notes: '' })
   const [success, setSuccess] = useState(null)
 
@@ -21,13 +23,26 @@ export default function CartSidebar() {
 
   useEffect(() => { if (!isOpen) setTimeout(() => setStep('cart'), 300) }, [isOpen])
 
+  // Pré-remplir avec les infos du compte
+  useEffect(() => {
+    if (session?.user) {
+      const [firstName, ...rest] = (session.user.name || '').split(' ')
+      setForm(f => ({ ...f, firstName: firstName || '', lastName: rest.join(' ') || '', email: session.user.email || '' }))
+    }
+  }, [session])
+
+  function handleCommander() {
+    if (!session) {
+      closeCart()
+      signIn(undefined, { callbackUrl: window.location.href })
+      return
+    }
+    setStep('checkout')
+  }
+
   async function handleOrder() {
     if (!form.firstName || !form.lastName || !form.phone) {
       alert('Veuillez remplir les champs obligatoires.')
-      return
-    }
-    if (delivery === 'livraison' && !form.address) {
-      alert('Veuillez entrer votre adresse de livraison.')
       return
     }
     setSaving(true)
@@ -36,14 +51,11 @@ export default function CartSidebar() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          firstName: form.firstName,
-          lastName: form.lastName,
-          email: form.email,
-          phone: form.phone,
-          address: delivery === 'livraison' ? form.address : 'Retrait en boutique',
-          notes: form.notes,
-          paymentMethod: 'STRIPE',
-          items: items.map((i) => ({ productId: i.id, quantity: i.qty, size: i.size })),
+          firstName: form.firstName, lastName: form.lastName,
+          email: form.email, phone: form.phone,
+          address: delivery === 'livraison' ? form.address : 'Retrait en boutique — Kourou',
+          notes: form.notes, paymentMethod: 'STRIPE',
+          items: items.map(i => ({ productId: i.id, quantity: i.qty, size: i.size })),
         }),
       })
       const data = await res.json()
@@ -53,7 +65,7 @@ export default function CartSidebar() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          items: items.map((i) => ({ name: i.name, price: i.price, quantity: i.qty, images: i.images })),
+          items: items.map(i => ({ name: i.name, price: i.price, quantity: i.qty, images: i.images })),
           customer: { firstName: form.firstName, lastName: form.lastName, email: form.email, phone: form.phone },
           orderId: data.order.id,
         }),
@@ -71,28 +83,16 @@ export default function CartSidebar() {
 
   return (
     <>
-      {isOpen && (
-        <div className="fixed inset-0 z-40 bg-brown-dark/40 backdrop-blur-sm" onClick={closeCart} aria-hidden />
-      )}
+      {isOpen && <div className="fixed inset-0 z-40 bg-brown-dark/40 backdrop-blur-sm" onClick={closeCart} aria-hidden />}
 
-      <aside
-        role="dialog"
-        aria-label="Panier"
-        className={`fixed right-0 top-0 bottom-0 z-50 w-full max-w-sm bg-white flex flex-col
-          shadow-2xl transition-transform duration-300 ease-in-out
-          ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
-      >
-        {/* En-tête */}
+      <aside role="dialog" aria-label="Panier"
+        className={`fixed right-0 top-0 bottom-0 z-50 w-full max-w-sm bg-white flex flex-col shadow-2xl transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+
         <div className="flex items-center justify-between px-6 py-5 border-b border-beige">
-          <h2 className="font-serif text-xl text-brown">
-            {step === 'cart' ? 'Mon Panier' : 'Finaliser la commande'}
-          </h2>
-          <button onClick={closeCart} className="text-taupe hover:text-brown transition-colors">
-            <X size={20} />
-          </button>
+          <h2 className="font-serif text-xl text-brown">{step === 'cart' ? 'Mon Panier' : 'Finaliser'}</h2>
+          <button onClick={closeCart} className="text-taupe hover:text-brown transition-colors"><X size={20} /></button>
         </div>
 
-        {/* Confirmation */}
         {success && (
           <div className="mx-4 mt-4 p-4 bg-green-50 border border-green-200 rounded-xl text-center">
             <p className="text-green-700 font-sans text-sm font-medium">✅ Commande créée !</p>
@@ -101,7 +101,6 @@ export default function CartSidebar() {
           </div>
         )}
 
-        {/* ÉTAPE 1 — Panier */}
         {step === 'cart' && (
           <>
             <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
@@ -111,11 +110,7 @@ export default function CartSidebar() {
                   <p className="font-serif text-lg italic">Votre panier est vide</p>
                   <Button onClick={closeCart} variant="outline" size="sm">Continuer mes achats</Button>
                 </div>
-              ) : (
-                items.map((item) => (
-                  <CartItem key={item.id} item={item} onQtyChange={updateQty} onRemove={removeItem} />
-                ))
-              )}
+              ) : items.map(item => <CartItem key={item.id} item={item} onQtyChange={updateQty} onRemove={removeItem} />)}
             </div>
 
             {items.length > 0 && (
@@ -124,8 +119,13 @@ export default function CartSidebar() {
                   <span className="font-sans text-sm text-brown-light uppercase tracking-wider">Total</span>
                   <span className="font-serif text-2xl text-brown font-semibold">{formatPrice(total)}</span>
                 </div>
-                <Button fullWidth size="lg" onClick={() => setStep('checkout')}>
-                  Commander →
+                {!session && (
+                  <p className="text-center font-sans text-xs text-taupe bg-beige/50 rounded-lg py-2">
+                    🔐 Connexion requise pour commander
+                  </p>
+                )}
+                <Button fullWidth size="lg" onClick={handleCommander}>
+                  {session ? 'Commander →' : 'Se connecter pour commander →'}
                 </Button>
                 <p className="text-center text-[0.65rem] text-taupe">Livraison & retrait en boutique — Kourou</p>
               </div>
@@ -133,7 +133,6 @@ export default function CartSidebar() {
           </>
         )}
 
-        {/* ÉTAPE 2 — Formulaire */}
         {step === 'checkout' && (
           <>
             <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3">
@@ -141,12 +140,10 @@ export default function CartSidebar() {
                 ← Retour au panier
               </button>
 
-              {/* Résumé */}
               <div className="bg-beige/50 rounded-xl p-3 mb-2">
-                {items.map((i) => (
+                {items.map(i => (
                   <div key={i.id} className="flex justify-between font-sans text-xs text-brown-light">
-                    <span>{i.name} ×{i.qty}</span>
-                    <span>{formatPrice(i.price * i.qty)}</span>
+                    <span>{i.name} ×{i.qty}</span><span>{formatPrice(i.price * i.qty)}</span>
                   </div>
                 ))}
                 <div className="flex justify-between font-serif text-sm text-brown font-semibold mt-2 pt-2 border-t border-beige">
@@ -154,79 +151,60 @@ export default function CartSidebar() {
                 </div>
               </div>
 
-              {/* Mode de récupération */}
+              {/* Mode récupération */}
               <div>
                 <label className="block font-sans text-[0.65rem] uppercase tracking-wider text-taupe mb-2">Mode de récupération</label>
                 <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setDelivery('retrait')}
-                    className={`flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl border-2 font-sans text-xs font-medium transition-all ${delivery === 'retrait'
-                        ? 'border-gold bg-gold/5 text-gold'
-                        : 'border-gray-200 text-taupe hover:border-gold'
-                      }`}
-                  >
-                    <Store size={18} />
-                    Retrait boutique
-                    <span className="text-[0.6rem] font-normal opacity-70">Kourou, Guyane</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDelivery('livraison')}
-                    className={`flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl border-2 font-sans text-xs font-medium transition-all ${delivery === 'livraison'
-                        ? 'border-gold bg-gold/5 text-gold'
-                        : 'border-gray-200 text-taupe hover:border-gold'
-                      }`}
-                  >
-                    <span className="text-lg">🚚</span>
-                    Livraison
-                    <span className="text-[0.6rem] font-normal opacity-70">Guyane Française</span>
-                  </button>
+                  {[
+                    { key: 'retrait', icon: <Store size={18} />, label: 'Retrait boutique', sub: 'Kourou, Guyane' },
+                    { key: 'livraison', icon: <span className="text-lg">🚚</span>, label: 'Livraison', sub: 'Guyane Française' },
+                  ].map(({ key, icon, label, sub }) => (
+                    <button key={key} type="button" onClick={() => setDelivery(key)}
+                      className={`flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl border-2 font-sans text-xs font-medium transition-all ${delivery === key ? 'border-gold bg-gold/5 text-gold' : 'border-gray-200 text-taupe hover:border-gold'
+                        }`}>
+                      {icon}{label}<span className="text-[0.6rem] font-normal opacity-70">{sub}</span>
+                    </button>
+                  ))}
                 </div>
               </div>
 
-              {/* Formulaire */}
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="block font-sans text-[0.65rem] uppercase tracking-wider text-taupe mb-1">Prénom *</label>
-                  <input className={inputClass} value={form.firstName} onChange={(e) => setForm({ ...form, firstName: e.target.value })} />
+                  <input className={inputClass} value={form.firstName} onChange={e => setForm({ ...form, firstName: e.target.value })} />
                 </div>
                 <div>
                   <label className="block font-sans text-[0.65rem] uppercase tracking-wider text-taupe mb-1">Nom *</label>
-                  <input className={inputClass} value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} />
+                  <input className={inputClass} value={form.lastName} onChange={e => setForm({ ...form, lastName: e.target.value })} />
                 </div>
               </div>
 
               <div>
                 <label className="block font-sans text-[0.65rem] uppercase tracking-wider text-taupe mb-1">Téléphone *</label>
-                <input className={inputClass} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+594 XX XX XX XX" />
+                <input className={inputClass} value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} placeholder="+594 XX XX XX XX" />
               </div>
 
               <div>
                 <label className="block font-sans text-[0.65rem] uppercase tracking-wider text-taupe mb-1">Email</label>
-                <input type="email" className={inputClass} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+                <input type="email" className={inputClass} value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
               </div>
 
               {delivery === 'livraison' && (
                 <div>
-                  <label className="block font-sans text-[0.65rem] uppercase tracking-wider text-taupe mb-1">Adresse de livraison *</label>
-                  <input className={inputClass} value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="Rue, ville, code postal…" />
+                  <label className="block font-sans text-[0.65rem] uppercase tracking-wider text-taupe mb-1">Adresse *</label>
+                  <input className={inputClass} value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} placeholder="Rue, ville, code postal…" />
                 </div>
               )}
 
               <div>
                 <label className="block font-sans text-[0.65rem] uppercase tracking-wider text-taupe mb-1">Note (taille, couleur…)</label>
-                <textarea className={inputClass} rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
+                <textarea className={inputClass} rows={2} value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
               </div>
             </div>
 
-            {/* Bouton paiement */}
             <div className="border-t border-beige px-6 py-4 space-y-2">
-              <button
-                onClick={handleOrder}
-                disabled={saving}
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-lg bg-brown text-white font-sans text-xs tracking-widest uppercase hover:bg-brown-dark transition-colors disabled:opacity-60"
-              >
+              <button onClick={handleOrder} disabled={saving}
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-lg bg-brown text-white font-sans text-xs tracking-widest uppercase hover:bg-brown-dark transition-colors disabled:opacity-60">
                 <CreditCard size={15} />
                 {saving ? 'En cours…' : 'Payer par carte'}
               </button>
