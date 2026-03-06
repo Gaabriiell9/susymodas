@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import { X, Trash2, CreditCard, Store } from 'lucide-react'
 import { useCart } from '@/context/CartContext'
 import { formatPrice } from '@/lib/utils'
@@ -23,7 +24,6 @@ export default function CartSidebar() {
 
   useEffect(() => { if (!isOpen) setTimeout(() => setStep('cart'), 300) }, [isOpen])
 
-  // Pré-remplir avec les infos du compte
   useEffect(() => {
     if (session?.user) {
       const [firstName, ...rest] = (session.user.name || '').split(' ')
@@ -151,7 +151,6 @@ export default function CartSidebar() {
                 </div>
               </div>
 
-              {/* Mode récupération */}
               <div>
                 <label className="block font-sans text-[0.65rem] uppercase tracking-wider text-taupe mb-2">Mode de récupération</label>
                 <div className="grid grid-cols-2 gap-2">
@@ -220,7 +219,12 @@ export default function CartSidebar() {
 function CartItem({ item, onQtyChange, onRemove }) {
   return (
     <div className="flex gap-4 py-3 border-b border-beige/60 last:border-0">
-      <div className="w-16 h-20 rounded-lg bg-cream flex-shrink-0 flex items-center justify-center text-2xl">👗</div>
+      <div className="relative w-16 h-20 rounded-lg bg-cream flex-shrink-0 overflow-hidden">
+        {item.images?.[0]
+          ? <Image src={item.images[0]} alt={item.name} fill className="object-cover object-top" />
+          : <span className="text-2xl flex items-center justify-center h-full">👗</span>
+        }
+      </div>
       <div className="flex-1 min-w-0">
         <p className="font-serif text-sm text-brown truncate">{item.name}</p>
         {item.size && <p className="font-sans text-[0.65rem] text-taupe mt-0.5">Taille {item.size}</p>}
