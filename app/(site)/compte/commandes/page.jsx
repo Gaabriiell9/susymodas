@@ -58,7 +58,7 @@ export default function CommandesPage() {
                     <div className="flex flex-col items-center justify-center py-24 gap-4 text-taupe">
                         <Package size={48} strokeWidth={1} />
                         <p className="font-serif text-xl italic">Aucune commande pour l&apos;instant</p>
-                        <button onClick={() => router.push('/')}
+                        <button onClick={() => router.push('/collection')}
                             className="px-8 py-3 bg-gold text-white font-sans text-xs uppercase tracking-widest rounded-lg hover:bg-rose-deep transition-colors">
                             Découvrir la collection
                         </button>
