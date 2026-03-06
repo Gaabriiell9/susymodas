@@ -1,0 +1,29 @@
+{
+    "name": "Susy Modas Evangelicas",
+    "short_name": "Susy Modas",
+    "description": "Robes chrétiennes modestes et élégantes — Kourou, Guyane",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#FAF7F2",
+    "theme_color": "#C9A96E",
+    "orientation": "portrait",
+    "icons": [
+        {
+            "src": "/logo-susy.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/logo-susy.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ],
+    "categories": [
+        "shopping",
+        "lifestyle"
+    ],
+    "lang": "fr"
+}
