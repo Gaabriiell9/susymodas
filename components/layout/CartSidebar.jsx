@@ -1,16 +1,17 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { X, Minus, Plus, Trash2, MessageCircle, CreditCard } from 'lucide-react'
+import { X, Minus, Plus, Trash2, CreditCard, Store } from 'lucide-react'
 import { useCart } from '@/context/CartContext'
-import { formatPrice, whatsappLink } from '@/lib/utils'
+import { formatPrice } from '@/lib/utils'
 import Button from '@/components/ui/Button'
 
 export default function CartSidebar() {
   const { isOpen, items, total, closeCart, updateQty, removeItem, clearCart } = useCart()
-  const [step, setStep] = useState('cart')   // 'cart' | 'checkout'
+  const [step, setStep] = useState('cart')
   const [saving, setSaving] = useState(false)
-  const [form, setForm] = useState({ firstName: '', lastName: '', email: '', phone: '', notes: '' })
+  const [delivery, setDelivery] = useState('retrait') // 'retrait' | 'livraison'
+  const [form, setForm] = useState({ firstName: '', lastName: '', email: '', phone: '', address: '', notes: '' })
   const [success, setSuccess] = useState(null)
 
   useEffect(() => {
@@ -18,20 +19,19 @@ export default function CartSidebar() {
     return () => { document.body.style.overflow = '' }
   }, [isOpen])
 
-  // Reset step quand on ferme
   useEffect(() => { if (!isOpen) setTimeout(() => setStep('cart'), 300) }, [isOpen])
 
-  const orderMessage = `Bonjour Susy Modas 👗\n\nJe souhaite commander :\n${items.map((i) => `• ${i.name} × ${i.qty} — ${formatPrice(i.price * i.qty)}`).join('\n')
-    }\n\nTotal : ${formatPrice(total)}\n\nMerci !`
-
-  async function handleOrder(method) {
+  async function handleOrder() {
     if (!form.firstName || !form.lastName || !form.phone) {
       alert('Veuillez remplir les champs obligatoires.')
       return
     }
+    if (delivery === 'livraison' && !form.address) {
+      alert('Veuillez entrer votre adresse de livraison.')
+      return
+    }
     setSaving(true)
     try {
-      // Crée la commande dans la BDD
       const res = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -40,35 +40,26 @@ export default function CartSidebar() {
           lastName: form.lastName,
           email: form.email,
           phone: form.phone,
+          address: delivery === 'livraison' ? form.address : 'Retrait en boutique',
           notes: form.notes,
-          paymentMethod: method,
+          paymentMethod: 'STRIPE',
           items: items.map((i) => ({ productId: i.id, quantity: i.qty, size: i.size })),
         }),
       })
       const data = await res.json()
-
       if (!res.ok) throw new Error(data.error)
 
-      if (method === 'WHATSAPP') {
-        // Redirige vers WhatsApp avec le message
-        window.open(whatsappLink(orderMessage), '_blank')
-        clearCart()
-        setSuccess(data.order.reference)
-        setStep('cart')
-      } else if (method === 'STRIPE') {
-        // Crée une session Stripe
-        const stripeRes = await fetch('/api/stripe', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            items: items.map((i) => ({ name: i.name, price: i.price, quantity: i.qty, images: i.images })),
-            customer: { firstName: form.firstName, lastName: form.lastName, email: form.email, phone: form.phone },
-            orderId: data.order.id,
-          }),
-        })
-        const stripeData = await stripeRes.json()
-        if (stripeData.url) window.location.href = stripeData.url
-      }
+      const stripeRes = await fetch('/api/stripe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: items.map((i) => ({ name: i.name, price: i.price, quantity: i.qty, images: i.images })),
+          customer: { firstName: form.firstName, lastName: form.lastName, email: form.email, phone: form.phone },
+          orderId: data.order.id,
+        }),
+      })
+      const stripeData = await stripeRes.json()
+      if (stripeData.url) window.location.href = stripeData.url
     } catch (err) {
       alert('Erreur : ' + err.message)
     } finally {
@@ -101,7 +92,7 @@ export default function CartSidebar() {
           </button>
         </div>
 
-        {/* Confirmation commande */}
+        {/* Confirmation */}
         {success && (
           <div className="mx-4 mt-4 p-4 bg-green-50 border border-green-200 rounded-xl text-center">
             <p className="text-green-700 font-sans text-sm font-medium">✅ Commande créée !</p>
@@ -136,7 +127,7 @@ export default function CartSidebar() {
                 <Button fullWidth size="lg" onClick={() => setStep('checkout')}>
                   Commander →
                 </Button>
-                <p className="text-center text-[0.65rem] text-taupe">Livraison en Guyane Française</p>
+                <p className="text-center text-[0.65rem] text-taupe">Livraison & retrait en boutique — Kourou</p>
               </div>
             )}
           </>
@@ -163,6 +154,37 @@ export default function CartSidebar() {
                 </div>
               </div>
 
+              {/* Mode de récupération */}
+              <div>
+                <label className="block font-sans text-[0.65rem] uppercase tracking-wider text-taupe mb-2">Mode de récupération</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setDelivery('retrait')}
+                    className={`flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl border-2 font-sans text-xs font-medium transition-all ${delivery === 'retrait'
+                        ? 'border-gold bg-gold/5 text-gold'
+                        : 'border-gray-200 text-taupe hover:border-gold'
+                      }`}
+                  >
+                    <Store size={18} />
+                    Retrait boutique
+                    <span className="text-[0.6rem] font-normal opacity-70">Kourou, Guyane</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDelivery('livraison')}
+                    className={`flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl border-2 font-sans text-xs font-medium transition-all ${delivery === 'livraison'
+                        ? 'border-gold bg-gold/5 text-gold'
+                        : 'border-gray-200 text-taupe hover:border-gold'
+                      }`}
+                  >
+                    <span className="text-lg">🚚</span>
+                    Livraison
+                    <span className="text-[0.6rem] font-normal opacity-70">Guyane Française</span>
+                  </button>
+                </div>
+              </div>
+
               {/* Formulaire */}
               <div className="grid grid-cols-2 gap-2">
                 <div>
@@ -185,32 +207,29 @@ export default function CartSidebar() {
                 <input type="email" className={inputClass} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
               </div>
 
+              {delivery === 'livraison' && (
+                <div>
+                  <label className="block font-sans text-[0.65rem] uppercase tracking-wider text-taupe mb-1">Adresse de livraison *</label>
+                  <input className={inputClass} value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="Rue, ville, code postal…" />
+                </div>
+              )}
+
               <div>
                 <label className="block font-sans text-[0.65rem] uppercase tracking-wider text-taupe mb-1">Note (taille, couleur…)</label>
                 <textarea className={inputClass} rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
               </div>
             </div>
 
-            {/* Boutons paiement */}
+            {/* Bouton paiement */}
             <div className="border-t border-beige px-6 py-4 space-y-2">
               <button
-                onClick={() => handleOrder('WHATSAPP')}
-                disabled={saving}
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-lg bg-[#25D366] text-white font-sans text-xs tracking-widest uppercase hover:bg-[#1fba57] transition-colors disabled:opacity-60"
-              >
-                <MessageCircle size={15} />
-                {saving ? 'En cours…' : 'Commander via WhatsApp'}
-              </button>
-
-              <button
-                onClick={() => handleOrder('STRIPE')}
+                onClick={handleOrder}
                 disabled={saving}
                 className="w-full flex items-center justify-center gap-2 py-3 rounded-lg bg-brown text-white font-sans text-xs tracking-widest uppercase hover:bg-brown-dark transition-colors disabled:opacity-60"
               >
                 <CreditCard size={15} />
                 {saving ? 'En cours…' : 'Payer par carte'}
               </button>
-
               <p className="text-center text-[0.6rem] text-taupe">🔒 Paiement sécurisé · Stripe</p>
             </div>
           </>
