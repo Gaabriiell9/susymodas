@@ -1,17 +1,18 @@
 'use client'
 
+import { Suspense } from 'react'
 import { useState } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Logo from '@/components/ui/Logo'
 import { Eye, EyeOff } from 'lucide-react'
 
-export default function ConnexionPage() {
+function ConnexionForm() {
     const router = useRouter()
     const searchParams = useSearchParams()
     const callbackUrl = searchParams.get('callbackUrl') || '/'
 
-    const [mode, setMode] = useState('login') // 'login' | 'register'
+    const [mode, setMode] = useState('login')
     const [loading, setLoading] = useState(false)
     const [showPwd, setShowPwd] = useState(false)
     const [error, setError] = useState('')
@@ -23,29 +24,19 @@ export default function ConnexionPage() {
         setError('')
         if (!form.email || !form.password) { setError('Veuillez remplir tous les champs.'); return }
         if (mode === 'register' && !form.name) { setError('Veuillez entrer votre prénom.'); return }
-
         setLoading(true)
         try {
             if (mode === 'register') {
                 const res = await fetch('/api/auth/register', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(form),
                 })
                 const data = await res.json()
                 if (!res.ok) { setError(data.error); setLoading(false); return }
             }
-
-            const result = await signIn('credentials', {
-                email: form.email, password: form.password, redirect: false,
-            })
-
-            if (result?.error) {
-                setError('Email ou mot de passe incorrect.')
-                setLoading(false)
-            } else {
-                router.push(callbackUrl)
-            }
+            const result = await signIn('credentials', { email: form.email, password: form.password, redirect: false })
+            if (result?.error) { setError('Email ou mot de passe incorrect.'); setLoading(false) }
+            else router.push(callbackUrl)
         } catch {
             setError('Une erreur est survenue.')
             setLoading(false)
@@ -60,15 +51,9 @@ export default function ConnexionPage() {
     return (
         <div className="min-h-screen bg-cream flex items-center justify-center px-4 py-16">
             <div className="w-full max-w-md">
+                <div className="flex justify-center mb-8"><Logo /></div>
 
-                {/* Logo */}
-                <div className="flex justify-center mb-8">
-                    <Logo />
-                </div>
-
-                {/* Card */}
                 <div className="bg-white rounded-2xl shadow-lg p-8">
-                    {/* Onglets */}
                     <div className="flex rounded-xl bg-beige/50 p-1 mb-6">
                         {[['login', 'Se connecter'], ['register', 'Créer un compte']].map(([key, label]) => (
                             <button key={key} onClick={() => { setMode(key); setError('') }}
@@ -87,18 +72,16 @@ export default function ConnexionPage() {
                                     onChange={e => setForm({ ...form, name: e.target.value })} />
                             </div>
                         )}
-
                         <div>
                             <label className="block font-sans text-[0.65rem] uppercase tracking-wider text-taupe mb-1">Email *</label>
                             <input type="email" className={inputClass} placeholder="marie@exemple.com" value={form.email}
                                 onChange={e => setForm({ ...form, email: e.target.value })} />
                         </div>
-
                         <div>
                             <label className="block font-sans text-[0.65rem] uppercase tracking-wider text-taupe mb-1">Mot de passe *</label>
                             <div className="relative">
-                                <input type={showPwd ? 'text' : 'password'} className={inputClass + ' pr-10'} placeholder="••••••••" value={form.password}
-                                    onChange={e => setForm({ ...form, password: e.target.value })}
+                                <input type={showPwd ? 'text' : 'password'} className={inputClass + ' pr-10'} placeholder="••••••••"
+                                    value={form.password} onChange={e => setForm({ ...form, password: e.target.value })}
                                     onKeyDown={e => e.key === 'Enter' && handleSubmit()} />
                                 <button onClick={() => setShowPwd(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-taupe hover:text-gold">
                                     {showPwd ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -114,14 +97,12 @@ export default function ConnexionPage() {
                         </button>
                     </div>
 
-                    {/* Séparateur */}
                     <div className="flex items-center gap-3 my-5">
                         <div className="flex-1 h-px bg-gray-100" />
                         <span className="font-sans text-xs text-taupe">ou</span>
                         <div className="flex-1 h-px bg-gray-100" />
                     </div>
 
-                    {/* Google */}
                     <button onClick={handleGoogle} disabled={loading}
                         className="w-full flex items-center justify-center gap-3 border border-gray-200 py-3 rounded-xl font-sans text-sm text-brown hover:border-gold hover:bg-beige/30 transition-colors disabled:opacity-60">
                         <svg width="18" height="18" viewBox="0 0 18 18">
@@ -139,5 +120,13 @@ export default function ConnexionPage() {
                 </p>
             </div>
         </div>
+    )
+}
+
+export default function ConnexionPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-cream flex items-center justify-center"><p className="font-serif text-taupe">Chargement…</p></div>}>
+            <ConnexionForm />
+        </Suspense>
     )
 }
