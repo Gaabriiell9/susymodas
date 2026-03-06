@@ -21,6 +21,7 @@ export default function Header() {
   const [results, setResults] = useState([])
   const [searching, setSearching] = useState(false)
   const inputRef = useRef(null)
+  const userMenuRef = useRef(null)
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10)
@@ -31,6 +32,17 @@ export default function Header() {
   useEffect(() => {
     if (searchOpen) setTimeout(() => inputRef.current?.focus(), 100)
   }, [searchOpen])
+
+  // Fermer le menu compte au clic extérieur
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) {
+        setUserMenu(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   useEffect(() => {
     if (!query.trim()) { setResults([]); return }
@@ -79,7 +91,7 @@ export default function Header() {
 
             {/* Compte */}
             {session ? (
-              <div className="relative">
+              <div className="relative" ref={userMenuRef}>
                 <button onClick={() => setUserMenu(v => !v)}
                   className="flex items-center gap-1.5 text-brown-light hover:text-gold transition-colors">
                   {session.user.image
