@@ -3,15 +3,46 @@
 @tailwind utilities;
 
 /* ── Scrollbar ───────────────────────────────────────── */
-::-webkit-scrollbar        { width: 5px; }
-::-webkit-scrollbar-track  { background: #FAF7F2; }
-::-webkit-scrollbar-thumb  { background: #C9A96E; border-radius: 4px; }
+::-webkit-scrollbar {
+  width: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: #FAF7F2;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #C9A96E;
+  border-radius: 4px;
+}
 
 /* ── Smooth scroll ───────────────────────────────────── */
-html { scroll-behavior: smooth; }
+html {
+  scroll-behavior: smooth;
+}
+
+/* ── Page transition ─────────────────────────────────── */
+main {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 
 /* ── Selection ───────────────────────────────────────── */
-::selection { background: #E8D5B0; color: #2C2118; }
+::selection {
+  background: #E8D5B0;
+  color: #2C2118;
+}
 
 /* ── Base ────────────────────────────────────────────── */
 @layer base {
@@ -34,6 +65,7 @@ html { scroll-behavior: smooth; }
   .divider-ornament {
     @apply flex items-center justify-center gap-3 mt-4;
   }
+
   .divider-ornament::before,
   .divider-ornament::after {
     content: '';
