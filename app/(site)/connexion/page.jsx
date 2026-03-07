@@ -152,7 +152,7 @@ function ConnexionForm() {
 
                         <div className="mt-5 text-center space-y-2">
                             <p className="font-sans text-xs text-taupe">
-                                Vous n'avez pas reçu le code ?{' '}
+                                Vous n&apos;avez pas reçu le code ?{' '}
                                 <button
                                     onClick={handleResend}
                                     disabled={resendCooldown > 0}
