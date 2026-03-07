@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { ShoppingBag, Heart } from 'lucide-react'
+import { ShoppingBag, Heart, X } from 'lucide-react'
 import { useCart } from '@/context/CartContext'
 import { useWishlist } from '@/context/WishlistContext'
 import { formatPrice, cn } from '@/lib/utils'
@@ -14,17 +14,29 @@ export default function ProductCard({ product }) {
   const { addItem, openCart } = useCart()
   const { toggle, isWished } = useWishlist()
   const [added, setAdded] = useState(false)
+  const [showSizes, setShowSizes] = useState(false)
 
   const wished = isWished(product.id)
   const badge = product.tags?.[0] ?? null
   const hasImage = product.images?.length > 0
   const isSold = product.stock === 0
+  const hasSizes = product.sizes?.length > 0
 
-  function handleAdd(e) {
+  function handleAddClick(e) {
     e.preventDefault()
     e.stopPropagation()
     if (isSold) return
-    addItem({ id: product.id, name: product.name, price: product.price, images: product.images })
+    // Si une seule taille ou pas de taille → ajouter direct
+    if (!hasSizes || product.sizes.length === 1) {
+      doAdd(product.sizes?.[0] ?? null)
+      return
+    }
+    setShowSizes(true)
+  }
+
+  function doAdd(size) {
+    addItem({ id: product.id, name: product.name, price: product.price, images: product.images, size })
+    setShowSizes(false)
     setAdded(true)
     openCart()
     setTimeout(() => setAdded(false), 1500)
@@ -34,6 +46,12 @@ export default function ProductCard({ product }) {
     e.preventDefault()
     e.stopPropagation()
     toggle(product)
+  }
+
+  function handleCloseSizes(e) {
+    e.preventDefault()
+    e.stopPropagation()
+    setShowSizes(false)
   }
 
   return (
@@ -73,16 +91,43 @@ export default function ProductCard({ product }) {
           {/* Coeur favoris */}
           <button
             onClick={handleWish}
-            className="absolute top-2.5 right-2.5 w-8 h-8 rounded-full bg-white/90 shadow flex items-center justify-center sm:opacity-0 sm:group-hover:opacity-100 opacity-100 transition-all duration-200"
+            className="absolute top-2.5 right-2.5 w-8 h-8 rounded-full bg-white/90 shadow flex items-center justify-center sm:opacity-0 sm:group-hover:opacity-100 opacity-100 transition-all duration-200 z-10"
             aria-label={wished ? 'Retirer des favoris' : 'Ajouter aux favoris'}
           >
             <Heart size={14} className={wished ? 'fill-rose-deep text-rose-deep' : 'text-brown-light'} />
           </button>
 
+          {/* Sélecteur de taille — s'affiche par-dessus l'image */}
+          {showSizes && (
+            <div
+              onClick={e => e.preventDefault()}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center z-20 p-4"
+            >
+              <button
+                onClick={handleCloseSizes}
+                className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-white/20 flex items-center justify-center text-white hover:bg-white/40 transition-colors"
+              >
+                <X size={14} />
+              </button>
+              <p className="font-sans text-[0.65rem] uppercase tracking-widest text-white/80 mb-3">Choisir une taille</p>
+              <div className="flex flex-wrap gap-2 justify-center">
+                {product.sizes.map((size) => (
+                  <button
+                    key={size}
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); doAdd(size) }}
+                    className="min-w-[2.5rem] h-9 px-3 rounded-xl bg-white text-brown font-sans text-xs font-semibold hover:bg-gold hover:text-white transition-colors active:scale-95"
+                  >
+                    {size}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Bouton panier desktop au survol */}
-          {!isSold && (
+          {!isSold && !showSizes && (
             <div className="absolute inset-x-0 bottom-0 hidden sm:block translate-y-full group-hover:translate-y-0 transition-transform duration-300 p-2.5">
-              <button onClick={handleAdd}
+              <button onClick={handleAddClick}
                 className={cn(
                   'w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-white font-sans text-[0.68rem] tracking-[0.08em] uppercase font-medium transition-colors duration-200',
                   added ? 'bg-green-600' : 'bg-gold hover:bg-rose-deep'
@@ -119,7 +164,7 @@ export default function ProductCard({ product }) {
               Vendu
             </div>
           ) : (
-            <button onClick={handleAdd}
+            <button onClick={handleAddClick}
               className={cn(
                 'sm:hidden mt-2.5 w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-white font-sans text-[0.68rem] tracking-[0.06em] uppercase font-medium transition-colors duration-200',
                 added ? 'bg-green-600' : 'bg-gold'
