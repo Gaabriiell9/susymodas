@@ -110,7 +110,9 @@ export default function CartSidebar() {
                   <p className="font-serif text-lg italic">Votre panier est vide</p>
                   <Button onClick={closeCart} variant="outline" size="sm">Continuer mes achats</Button>
                 </div>
-              ) : items.map(item => <CartItem key={item.id} item={item} onQtyChange={updateQty} onRemove={removeItem} />)}
+              ) : items.map(item => (
+                <CartItem key={`${item.id}-${item.size}`} item={item} onQtyChange={updateQty} onRemove={removeItem} />
+              ))}
             </div>
 
             {items.length > 0 && (
@@ -142,8 +144,9 @@ export default function CartSidebar() {
 
               <div className="bg-beige/50 rounded-xl p-3 mb-2">
                 {items.map(i => (
-                  <div key={i.id} className="flex justify-between font-sans text-xs text-brown-light">
-                    <span>{i.name} ×{i.qty}</span><span>{formatPrice(i.price * i.qty)}</span>
+                  <div key={`${i.id}-${i.size}`} className="flex justify-between font-sans text-xs text-brown-light">
+                    <span>{i.name}{i.size ? ` — ${i.size}` : ''} ×{i.qty}</span>
+                    <span>{formatPrice(i.price * i.qty)}</span>
                   </div>
                 ))}
                 <div className="flex justify-between font-serif text-sm text-brown font-semibold mt-2 pt-2 border-t border-beige">
@@ -159,8 +162,7 @@ export default function CartSidebar() {
                     { key: 'livraison', icon: <span className="text-lg">🚚</span>, label: 'Livraison', sub: 'Guyane Française' },
                   ].map(({ key, icon, label, sub }) => (
                     <button key={key} type="button" onClick={() => setDelivery(key)}
-                      className={`flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl border-2 font-sans text-xs font-medium transition-all ${delivery === key ? 'border-gold bg-gold/5 text-gold' : 'border-gray-200 text-taupe hover:border-gold'
-                        }`}>
+                      className={`flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl border-2 font-sans text-xs font-medium transition-all ${delivery === key ? 'border-gold bg-gold/5 text-gold' : 'border-gray-200 text-taupe hover:border-gold'}`}>
                       {icon}{label}<span className="text-[0.6rem] font-normal opacity-70">{sub}</span>
                     </button>
                   ))}
@@ -217,6 +219,8 @@ export default function CartSidebar() {
 }
 
 function CartItem({ item, onQtyChange, onRemove }) {
+  const atMax = item.maxStock !== undefined && item.qty >= item.maxStock
+
   return (
     <div className="flex gap-4 py-3 border-b border-beige/60 last:border-0">
       <div className="relative w-16 h-20 rounded-lg bg-cream flex-shrink-0 overflow-hidden">
@@ -231,13 +235,21 @@ function CartItem({ item, onQtyChange, onRemove }) {
         <p className="font-sans text-sm font-medium text-gold mt-1">{formatPrice(item.price)}</p>
         <div className="flex items-center justify-between mt-2">
           <div className="flex items-center gap-2">
-            <button onClick={() => onQtyChange(item.id, item.qty - 1)} className="w-6 h-6 rounded bg-beige flex items-center justify-center hover:bg-gold-light transition-colors text-xs">−</button>
+            <button onClick={() => onQtyChange(item.id, item.qty - 1, item.size)}
+              className="w-6 h-6 rounded bg-beige flex items-center justify-center hover:bg-gold-light transition-colors text-xs">−</button>
             <span className="font-sans text-sm w-4 text-center">{item.qty}</span>
-            <button onClick={() => onQtyChange(item.id, item.qty + 1)} className="w-6 h-6 rounded bg-beige flex items-center justify-center hover:bg-gold-light transition-colors text-xs">+</button>
+            <button
+              onClick={() => !atMax && onQtyChange(item.id, item.qty + 1, item.size)}
+              disabled={atMax}
+              title={atMax ? `Stock max atteint (${item.maxStock})` : undefined}
+              className={`w-6 h-6 rounded flex items-center justify-center transition-colors text-xs ${atMax ? 'bg-gray-100 text-gray-300 cursor-not-allowed' : 'bg-beige hover:bg-gold-light'}`}>+</button>
           </div>
-          <button onClick={() => onRemove(item.id)} className="text-taupe hover:text-rose-deep transition-colors">
-            <Trash2 size={14} />
-          </button>
+          <div className="flex items-center gap-2">
+            {atMax && <span className="font-sans text-[0.6rem] text-amber-500">Stock max</span>}
+            <button onClick={() => onRemove(item.id, item.size)} className="text-taupe hover:text-rose-deep transition-colors">
+              <Trash2 size={14} />
+            </button>
+          </div>
         </div>
       </div>
     </div>

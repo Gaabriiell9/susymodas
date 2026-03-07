@@ -1,5 +1,4 @@
 'use client'
-
 import { createContext, useContext, useReducer, useCallback, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 
@@ -10,20 +9,30 @@ function cartReducer(state, action) {
     case 'ADD_ITEM': {
       const existing = state.items.find((i) => i.id === action.payload.id && i.size === action.payload.size)
       if (existing) {
+        const newQty = existing.qty + 1
+        // Respecter le stock max
+        if (existing.maxStock !== undefined && newQty > existing.maxStock) return state
         return {
           ...state, items: state.items.map((i) =>
-            i.id === action.payload.id && i.size === action.payload.size ? { ...i, qty: i.qty + 1 } : i
+            i.id === action.payload.id && i.size === action.payload.size ? { ...i, qty: newQty } : i
           )
         }
       }
       return { ...state, items: [...state.items, { ...action.payload, qty: 1 }] }
     }
     case 'REMOVE_ITEM':
-      return { ...state, items: state.items.filter((i) => i.id !== action.payload) }
+      return { ...state, items: state.items.filter((i) => !(i.id === action.payload.id && i.size === action.payload.size)) }
     case 'UPDATE_QTY': {
-      const { id, qty } = action.payload
-      if (qty < 1) return { ...state, items: state.items.filter((i) => i.id !== id) }
-      return { ...state, items: state.items.map((i) => (i.id === id ? { ...i, qty } : i)) }
+      const { id, qty, size } = action.payload
+      if (qty < 1) return { ...state, items: state.items.filter((i) => !(i.id === id && i.size === size)) }
+      return {
+        ...state, items: state.items.map((i) => {
+          if (i.id !== id || i.size !== size) return i
+          // Bloquer au-delà du stock max
+          const capped = i.maxStock !== undefined ? Math.min(qty, i.maxStock) : qty
+          return { ...i, qty: capped }
+        })
+      }
     }
     case 'CLEAR_CART': return { ...state, items: [] }
     case 'LOAD': return { ...state, items: action.items }
@@ -40,17 +49,13 @@ export function CartProvider({ children }) {
   const [state, dispatch] = useReducer(cartReducer, initialState)
   const { data: session } = useSession()
 
-  // Charger le panier au login
   useEffect(() => {
     if (session?.user) {
       fetch('/api/cart')
         .then(r => r.json())
-        .then(data => {
-          if (data.items?.length) dispatch({ type: 'LOAD', items: data.items })
-        })
+        .then(data => { if (data.items?.length) dispatch({ type: 'LOAD', items: data.items }) })
         .catch(() => { })
     } else {
-      // Non connecté : charger depuis localStorage
       try {
         const saved = localStorage.getItem('susy_cart')
         if (saved) dispatch({ type: 'LOAD', items: JSON.parse(saved) })
@@ -58,7 +63,6 @@ export function CartProvider({ children }) {
     }
   }, [session])
 
-  // Sauvegarder dans localStorage si non connecté
   useEffect(() => {
     if (!session?.user) {
       try { localStorage.setItem('susy_cart', JSON.stringify(state.items)) } catch { }
@@ -79,14 +83,19 @@ export function CartProvider({ children }) {
     }
   }, [session])
 
-  const removeItem = useCallback(async (id) => {
-    dispatch({ type: 'REMOVE_ITEM', payload: id })
+  // removeItem accepte maintenant (id, size)
+  const removeItem = useCallback(async (id, size) => {
+    dispatch({ type: 'REMOVE_ITEM', payload: { id, size } })
     if (session?.user) {
       await fetch(`/api/cart?productId=${id}`, { method: 'DELETE' }).catch(() => { })
     }
   }, [session])
 
-  const updateQty = useCallback((id, qty) => dispatch({ type: 'UPDATE_QTY', payload: { id, qty } }), [])
+  // updateQty accepte maintenant (id, qty, size)
+  const updateQty = useCallback((id, qty, size) => {
+    dispatch({ type: 'UPDATE_QTY', payload: { id, qty, size } })
+  }, [])
+
   const clearCart = useCallback(() => dispatch({ type: 'CLEAR_CART' }), [])
   const openCart = useCallback(() => dispatch({ type: 'OPEN_CART' }), [])
   const closeCart = useCallback(() => dispatch({ type: 'CLOSE_CART' }), [])

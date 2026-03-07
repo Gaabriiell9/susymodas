@@ -22,20 +22,25 @@ export default function ProductCard({ product }) {
   const isSold = product.stock === 0
   const hasSizes = product.sizes?.length > 0
 
+  function getStockForSize(size) {
+    if (product.sizeStock && product.sizeStock[size] !== undefined) return product.sizeStock[size]
+    if (hasSizes && product.sizes.length > 0) return Math.floor((product.stock ?? 1) / product.sizes.length) || 1
+    return product.stock ?? 1
+  }
+
   function handleAddClick(e) {
     e.preventDefault()
     e.stopPropagation()
     if (isSold) return
-    // Si une seule taille ou pas de taille → ajouter direct
     if (!hasSizes || product.sizes.length === 1) {
-      doAdd(product.sizes?.[0] ?? null)
+      doAdd(product.sizes?.[0] ?? null, getStockForSize(product.sizes?.[0]))
       return
     }
     setShowSizes(true)
   }
 
-  function doAdd(size) {
-    addItem({ id: product.id, name: product.name, price: product.price, images: product.images, size })
+  function doAdd(size, maxStock) {
+    addItem({ id: product.id, name: product.name, price: product.price, images: product.images, size, maxStock })
     setShowSizes(false)
     setAdded(true)
     openCart()
@@ -48,12 +53,6 @@ export default function ProductCard({ product }) {
     toggle(product)
   }
 
-  function handleCloseSizes(e) {
-    e.preventDefault()
-    e.stopPropagation()
-    setShowSizes(false)
-  }
-
   return (
     <Link href={`/produit/${product.slug}`}>
       <article className={cn(
@@ -61,70 +60,57 @@ export default function ProductCard({ product }) {
         isSold ? 'opacity-75' : 'hover:-translate-y-1 hover:shadow-xl'
       )}>
 
-        {/* Zone image */}
         <div className="relative overflow-hidden aspect-[3/4]">
           {hasImage ? (
-            <Image
-              src={product.images[0]}
-              alt={product.name}
-              fill
+            <Image src={product.images[0]} alt={product.name} fill
               className={cn('object-cover object-top', isSold && 'grayscale opacity-60')}
-              sizes="(max-width: 768px) 50vw, 25vw"
-            />
+              sizes="(max-width: 768px) 50vw, 25vw" />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
               <span className="text-5xl sm:text-6xl opacity-40 select-none" aria-hidden>👗</span>
             </div>
           )}
 
-          {/* Badge VENDU */}
           {isSold && (
             <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-              <span className="bg-white text-brown font-sans text-xs font-bold uppercase tracking-widest px-4 py-2 rounded-full">
-                Vendu
-              </span>
+              <span className="bg-white text-brown font-sans text-xs font-bold uppercase tracking-widest px-4 py-2 rounded-full">Vendu</span>
             </div>
           )}
 
           {!isSold && badge && <Badge label={badge} />}
 
-          {/* Coeur favoris */}
-          <button
-            onClick={handleWish}
+          <button onClick={handleWish}
             className="absolute top-2.5 right-2.5 w-8 h-8 rounded-full bg-white/90 shadow flex items-center justify-center sm:opacity-0 sm:group-hover:opacity-100 opacity-100 transition-all duration-200 z-10"
-            aria-label={wished ? 'Retirer des favoris' : 'Ajouter aux favoris'}
-          >
+            aria-label={wished ? 'Retirer des favoris' : 'Ajouter aux favoris'}>
             <Heart size={14} className={wished ? 'fill-rose-deep text-rose-deep' : 'text-brown-light'} />
           </button>
 
-          {/* Sélecteur de taille — s'affiche par-dessus l'image */}
+          {/* Sélecteur de taille overlay */}
           {showSizes && (
-            <div
-              onClick={e => e.preventDefault()}
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center z-20 p-4"
-            >
+            <div onClick={e => e.preventDefault()}
+              className="absolute inset-0 bg-black/65 backdrop-blur-sm flex flex-col items-center justify-center z-20 p-4">
               <button
-                onClick={handleCloseSizes}
-                className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-white/20 flex items-center justify-center text-white hover:bg-white/40 transition-colors"
-              >
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowSizes(false) }}
+                className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-white/20 flex items-center justify-center text-white hover:bg-white/40 transition-colors">
                 <X size={14} />
               </button>
               <p className="font-sans text-[0.65rem] uppercase tracking-widest text-white/80 mb-3">Choisir une taille</p>
               <div className="flex flex-wrap gap-2 justify-center">
-                {product.sizes.map((size) => (
-                  <button
-                    key={size}
-                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); doAdd(size) }}
-                    className="min-w-[2.5rem] h-9 px-3 rounded-xl bg-white text-brown font-sans text-xs font-semibold hover:bg-gold hover:text-white transition-colors active:scale-95"
-                  >
-                    {size}
-                  </button>
-                ))}
+                {product.sizes.map((size) => {
+                  const stock = getStockForSize(size)
+                  return (
+                    <button key={size}
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); doAdd(size, stock) }}
+                      className="relative min-w-[2.8rem] h-10 px-3 rounded-xl bg-white text-brown font-sans text-xs font-semibold hover:bg-gold hover:text-white transition-colors active:scale-95 flex flex-col items-center justify-center gap-0">
+                      <span>{size}</span>
+                      <span className="text-[0.5rem] opacity-50 leading-none">{stock} unité{stock > 1 ? 's' : ''}</span>
+                    </button>
+                  )
+                })}
               </div>
             </div>
           )}
 
-          {/* Bouton panier desktop au survol */}
           {!isSold && !showSizes && (
             <div className="absolute inset-x-0 bottom-0 hidden sm:block translate-y-full group-hover:translate-y-0 transition-transform duration-300 p-2.5">
               <button onClick={handleAddClick}
@@ -139,7 +125,6 @@ export default function ProductCard({ product }) {
           )}
         </div>
 
-        {/* Infos */}
         <div className="p-3 sm:p-4">
           <p className="font-sans text-[0.6rem] tracking-[0.1em] uppercase text-taupe mb-0.5">
             {product.sizes?.join(' · ') ?? product.category}
@@ -158,11 +143,8 @@ export default function ProductCard({ product }) {
             {!isSold && <Stars rating={5} />}
           </div>
 
-          {/* Bouton mobile */}
           {isSold ? (
-            <div className="sm:hidden mt-2.5 w-full flex items-center justify-center py-2 rounded-xl bg-gray-100 font-sans text-[0.68rem] uppercase text-gray-400 font-medium">
-              Vendu
-            </div>
+            <div className="sm:hidden mt-2.5 w-full flex items-center justify-center py-2 rounded-xl bg-gray-100 font-sans text-[0.68rem] uppercase text-gray-400 font-medium">Vendu</div>
           ) : (
             <button onClick={handleAddClick}
               className={cn(
