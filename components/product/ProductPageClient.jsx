@@ -10,18 +10,46 @@ import Stars from '@/components/ui/Stars'
 
 export default function ProductPageClient({ product }) {
     const router = useRouter()
-    const { addItem } = useCart()
+    const { addItem, items, openCart } = useCart()
     const [selectedSize, setSelectedSize] = useState(product.sizes?.[0] ?? null)
     const [selectedColor, setSelectedColor] = useState(product.colors?.[0] ?? null)
     const [selectedImage, setSelectedImage] = useState(0)
     const [wished, setWished] = useState(false)
     const [added, setAdded] = useState(false)
 
+    // Stock max pour la taille sélectionnée
+    function getMaxStock(size) {
+        if (!size || !product.sizes?.length) return product.stock ?? 1
+        return Math.floor(product.stock / product.sizes.length) || 1
+    }
+
+    // Quantité déjà dans le panier pour cet item+taille
+    function getCartQty(size) {
+        return items.find(i => i.id === product.id && i.size === size)?.qty ?? 0
+    }
+
     function handleAdd() {
-        addItem({ id: product.id, name: product.name, price: product.price, size: selectedSize, color: selectedColor, images: product.images })
+        const maxStock = getMaxStock(selectedSize)
+        const cartQty = getCartQty(selectedSize)
+        if (cartQty >= maxStock) return // déjà au max
+        addItem({
+            id: product.id,
+            name: product.name,
+            price: product.price,
+            size: selectedSize,
+            color: selectedColor,
+            images: product.images,
+            maxStock,
+        })
         setAdded(true)
+        openCart()
         setTimeout(() => setAdded(false), 2000)
     }
+
+    const maxStock = getMaxStock(selectedSize)
+    const cartQty = getCartQty(selectedSize)
+    const isAtMax = cartQty >= maxStock
+    const isSold = product.stock === 0
 
     const hasImages = product.images?.length > 0
 
@@ -123,26 +151,52 @@ export default function ProductPageClient({ product }) {
                                     Taille — <span className="text-brown font-medium">{selectedSize}</span>
                                 </p>
                                 <div className="flex flex-wrap gap-2">
-                                    {product.sizes.map(size => (
-                                        <button key={size} onClick={() => setSelectedSize(size)}
-                                            className={cn('w-12 h-10 rounded-lg border font-sans text-xs font-medium transition-all',
-                                                selectedSize === size ? 'border-gold bg-gold text-white' : 'border-gold-light text-taupe hover:border-gold'
-                                            )}>
-                                            {size}
-                                        </button>
-                                    ))}
+                                    {product.sizes.map(size => {
+                                        const sizeMax = getMaxStock(size)
+                                        const sizeCartQty = getCartQty(size)
+                                        const sizeAtMax = sizeCartQty >= sizeMax
+                                        return (
+                                            <button key={size} onClick={() => setSelectedSize(size)}
+                                                className={cn('relative w-12 h-10 rounded-lg border font-sans text-xs font-medium transition-all',
+                                                    selectedSize === size ? 'border-gold bg-gold text-white' : 'border-gold-light text-taupe hover:border-gold',
+                                                    sizeAtMax && selectedSize !== size && 'opacity-40 cursor-not-allowed'
+                                                )}>
+                                                {size}
+                                                {sizeAtMax && (
+                                                    <span className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-red-400 rounded-full" title="Stock max atteint" />
+                                                )}
+                                            </button>
+                                        )
+                                    })}
                                 </div>
+                                {/* Indicateur stock */}
+                                {selectedSize && (
+                                    <p className="font-sans text-[0.65rem] text-taupe mt-2">
+                                        {isAtMax
+                                            ? <span className="text-amber-500 font-medium">⚠️ Stock max atteint pour cette taille</span>
+                                            : <span>{maxStock - cartQty} unité{maxStock - cartQty > 1 ? 's' : ''} disponible{maxStock - cartQty > 1 ? 's' : ''}</span>
+                                        }
+                                    </p>
+                                )}
                             </div>
                         )}
 
                         {/* Bouton */}
-                        <button onClick={handleAdd}
-                            className={cn('w-full flex items-center justify-center gap-2 py-4 rounded-xl text-white font-sans text-xs uppercase tracking-widest transition-colors mb-4',
-                                added ? 'bg-green-600' : 'bg-gold hover:bg-rose-deep'
-                            )}>
-                            <ShoppingBag size={16} />
-                            {added ? '✓ Ajouté au panier !' : 'Ajouter au panier'}
-                        </button>
+                        {isSold ? (
+                            <div className="w-full flex items-center justify-center py-4 rounded-xl bg-gray-100 font-sans text-xs uppercase tracking-widest text-gray-400 mb-4">
+                                Vendu
+                            </div>
+                        ) : (
+                            <button onClick={handleAdd} disabled={isAtMax}
+                                className={cn('w-full flex items-center justify-center gap-2 py-4 rounded-xl text-white font-sans text-xs uppercase tracking-widest transition-colors mb-4',
+                                    added ? 'bg-green-600' :
+                                        isAtMax ? 'bg-gray-300 cursor-not-allowed' :
+                                            'bg-gold hover:bg-rose-deep'
+                                )}>
+                                <ShoppingBag size={16} />
+                                {added ? '✓ Ajouté au panier !' : isAtMax ? 'Stock max atteint' : 'Ajouter au panier'}
+                            </button>
+                        )}
 
                         {/* Infos */}
                         <div className="grid grid-cols-2 gap-2">
