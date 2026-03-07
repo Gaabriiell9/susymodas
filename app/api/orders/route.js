@@ -30,9 +30,11 @@ export async function POST(request) {
   try {
     const body = await request.json()
 
-    // Récupère le user connecté (optionnel — commande invité possible)
+    // Récupère le user connecté
     const session = await getServerSession(authOptions)
-    const userId = session?.user?.id ? parseInt(session.user.id) : null
+    const rawId = session?.user?.id
+    const userId = rawId ? Number(rawId) : null
+    console.log('[ORDER] session userId raw:', rawId, '→ parsed:', userId)
 
     // Validation
     const required = ['firstName', 'lastName', 'email', 'phone', 'items']
@@ -73,12 +75,13 @@ export async function POST(request) {
         city: body.city,
         notes: body.notes,
         paymentMethod: body.paymentMethod ?? 'WHATSAPP',
-        // ↓ LIE la commande au compte client si connecté
         ...(userId ? { userId } : {}),
         items: { create: itemsData },
       },
       include: { items: true },
     })
+
+    console.log('[ORDER] created:', order.reference, '| userId in DB:', order.userId)
 
     return NextResponse.json({ order }, { status: 201 })
   } catch (error) {
