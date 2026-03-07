@@ -1,11 +1,13 @@
 // app/api/orders/route.js
 import { NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/app/api/auth/[...nextauth]/route'
 import prisma from '@/lib/prisma'
 import { getAdminFromCookies } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
-// ── GET /api/orders ───────────────────────────────────────────────────────────
-// Réservé admin — liste toutes les commandes
+
+// ── GET /api/orders ── admin uniquement
 export async function GET(request) {
   const admin = await getAdminFromCookies()
   if (!admin) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
@@ -20,15 +22,17 @@ export async function GET(request) {
     },
     orderBy: { createdAt: 'desc' },
   })
-
   return NextResponse.json({ orders })
 }
 
-// ── POST /api/orders ──────────────────────────────────────────────────────────
-// Crée une nouvelle commande (client)
+// ── POST /api/orders ── crée une commande et lie au user connecté
 export async function POST(request) {
   try {
     const body = await request.json()
+
+    // Récupère le user connecté (optionnel — commande invité possible)
+    const session = await getServerSession(authOptions)
+    const userId = session?.user?.id ? parseInt(session.user.id) : null
 
     // Validation
     const required = ['firstName', 'lastName', 'email', 'phone', 'items']
@@ -53,7 +57,7 @@ export async function POST(request) {
       itemsData.push({ productId: product.id, quantity: item.quantity, price, size: item.size, color: item.color })
     }
 
-    // Génère une référence unique
+    // Référence unique
     const count = await prisma.order.count()
     const ref = `SME-${new Date().getFullYear()}-${String(count + 1).padStart(4, '0')}`
 
@@ -69,6 +73,8 @@ export async function POST(request) {
         city: body.city,
         notes: body.notes,
         paymentMethod: body.paymentMethod ?? 'WHATSAPP',
+        // ↓ LIE la commande au compte client si connecté
+        ...(userId ? { userId } : {}),
         items: { create: itemsData },
       },
       include: { items: true },
