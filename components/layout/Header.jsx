@@ -115,10 +115,27 @@ export default function Header() {
                   </div>
                 )}
               </div>
+              // ✅ Par ça :
             ) : (
-              <Link href="/connexion" className="text-brown-light hover:text-gold transition-colors" aria-label="Mon compte">
-                <User size={20} strokeWidth={1.5} />
-              </Link>
+              <div className="relative" ref={userMenuRef}>
+                <button onClick={() => setUserMenu(v => !v)}
+                  className="text-brown-light hover:text-gold transition-colors" aria-label="Mon compte">
+                  <User size={20} strokeWidth={1.5} />
+                </button>
+                {userMenu && (
+                  <div className="absolute right-0 top-10 bg-white rounded-xl shadow-lg border border-gray-100 py-2 w-48 z-50">
+                    <p className="px-4 py-2 font-sans text-xs text-taupe border-b border-gray-100">Mon compte</p>
+                    <Link href="/connexion" onClick={() => setUserMenu(false)}
+                      className="flex items-center gap-2 px-4 py-2.5 font-sans text-sm text-brown hover:bg-beige/50 transition-colors">
+                      <User size={14} className="text-gold" /> Se connecter
+                    </Link>
+                    <Link href="/connexion?mode=register" onClick={() => setUserMenu(false)}
+                      className="flex items-center gap-2 px-4 py-2.5 font-sans text-sm text-brown hover:bg-beige/50 transition-colors">
+                      ✦ Créer un compte
+                    </Link>
+                  </div>
+                )}
+              </div>
             )}
           </div>
         </div>
