@@ -27,320 +27,224 @@ async function imageToBase64(url) {
             reader.onloadend = () => resolve(reader.result)
             reader.readAsDataURL(blob)
         })
-    } catch {
-        return null
-    }
+    } catch { return null }
 }
 
 async function generatePDF(order, isRetrait) {
     const { jsPDF } = await import('jspdf')
-    const doc = new jsPDF({ unit: 'mm', format: 'a4' })
 
-    const W = 210
-    const M = 16          // margin gauche/droite
-    const CW = W - M * 2  // content width = 178mm
+    // Format A5 — plus petit, plus élégant
+    const doc = new jsPDF({ unit: 'mm', format: 'a5' })
+
+    const W = 148
+    const M = 14
+    const CW = W - M * 2   // 120mm
     let y = 0
 
-    // Palette
     const GOLD = [185, 148, 88]
-    const BROWN = [62, 39, 24]
+    const BROWN = [58, 37, 22]
     const TAUPE = [130, 110, 95]
     const BEIGE = [248, 243, 236]
     const WHITE = [255, 255, 255]
-    const LGRAY = [245, 245, 245]
+    const LGRAY = [245, 243, 240]
 
-    // ─────────────────────────────────────────
-    // HEADER
-    // ─────────────────────────────────────────
+    // ── HEADER compact
     doc.setFillColor(...GOLD)
-    doc.rect(0, 0, W, 32, 'F')
+    doc.rect(0, 0, W, 22, 'F')
 
-    // Nom boutique centré
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(14)
     doc.setTextColor(...WHITE)
-    doc.setFont('helvetica', 'bold')
-    doc.setFontSize(20)
-    doc.text('Susy Modas', W / 2, 14, { align: 'center' })
+    doc.text('Susy Modas', W / 2, 11, { align: 'center' })
 
     doc.setFont('helvetica', 'normal')
-    doc.setFontSize(7)
-    doc.setTextColor(240, 220, 180)
-    doc.text('EVANGELICAS  \u00B7  KOUROU  \u00B7  GUYANE', W / 2, 21, { align: 'center' })
-
-    // Ligne de séparation fine sous le header
-    doc.setDrawColor(...GOLD)
-    doc.setLineWidth(0.3)
-    doc.line(0, 32, W, 32)
-
-    y = 42
-
-    // ─────────────────────────────────────────
-    // TITRE DU DOCUMENT
-    // ─────────────────────────────────────────
-    const title = isRetrait ? 'BON DE RETRAIT EN BOUTIQUE' : 'RECU DE COMMANDE'
-    doc.setFont('helvetica', 'bold')
-    doc.setFontSize(12)
-    doc.setTextColor(...BROWN)
-    doc.text(title, W / 2, y, { align: 'center' })
-
-    // Trait décoratif doré sous le titre
-    doc.setDrawColor(...GOLD)
-    doc.setLineWidth(0.8)
-    doc.line(W / 2 - 38, y + 3, W / 2 + 38, y + 3)
-
-    y += 13
-
-    // ─────────────────────────────────────────
-    // RÉFÉRENCE + DATE
-    // ─────────────────────────────────────────
-    doc.setFillColor(...BEIGE)
-    doc.roundedRect(M, y, CW, 20, 2, 2, 'F')
-
-    // Col gauche — Référence
-    doc.setFont('helvetica', 'bold')
-    doc.setFontSize(7)
-    doc.setTextColor(...TAUPE)
-    doc.text('REFERENCE', M + 6, y + 6)
-    doc.setFont('helvetica', 'bold')
-    doc.setFontSize(11)
-    doc.setTextColor(...BROWN)
-    doc.text(order.reference, M + 6, y + 15)
-
-    // Séparateur vertical
-    doc.setDrawColor(...GOLD)
-    doc.setLineWidth(0.3)
-    doc.line(M + CW / 2, y + 4, M + CW / 2, y + 16)
-
-    // Col droite — Date
-    doc.setFont('helvetica', 'bold')
-    doc.setFontSize(7)
-    doc.setTextColor(...TAUPE)
-    doc.text('DATE', M + CW / 2 + 6, y + 6)
-    doc.setFont('helvetica', 'normal')
-    doc.setFontSize(9)
-    doc.setTextColor(...BROWN)
-    doc.text(formatDate(order.createdAt), M + CW / 2 + 6, y + 15)
-
-    y += 27
-
-    // ─────────────────────────────────────────
-    // CLIENT
-    // ─────────────────────────────────────────
-    doc.setFont('helvetica', 'bold')
-    doc.setFontSize(7)
-    doc.setTextColor(...TAUPE)
-    doc.text('CLIENT', M, y)
-    y += 4
-
-    doc.setFillColor(...BEIGE)
-    doc.roundedRect(M, y, CW, 21, 2, 2, 'F')
-
-    // Accent doré à gauche
-    doc.setFillColor(...GOLD)
-    doc.roundedRect(M, y, 3, 21, 1, 1, 'F')
-
-    doc.setFont('helvetica', 'bold')
-    doc.setFontSize(10)
-    doc.setTextColor(...BROWN)
-    doc.text(`${order.firstName} ${order.lastName}`, M + 8, y + 8)
-
-    doc.setFont('helvetica', 'normal')
-    doc.setFontSize(8)
-    doc.setTextColor(...TAUPE)
-    doc.text(order.email || '', M + 8, y + 15)
-    doc.text(order.phone || '', M + CW - 4, y + 15, { align: 'right' })
-
-    y += 28
-
-    // ─────────────────────────────────────────
-    // MODE (retrait / livraison) — sans emoji
-    // ─────────────────────────────────────────
-    doc.setFillColor(isRetrait ? 255 : 239, isRetrait ? 251 : 246, isRetrait ? 235 : 255)
-    doc.setDrawColor(...(isRetrait ? GOLD : [147, 197, 253]))
-    doc.setLineWidth(0.6)
-    doc.roundedRect(M, y, CW, 16, 2, 2, 'FD')
-
-    // Icone carré coloré (remplacement emoji)
-    doc.setFillColor(...(isRetrait ? GOLD : [59, 130, 246]))
-    doc.roundedRect(M + 5, y + 4, 8, 8, 1, 1, 'F')
-    doc.setFont('helvetica', 'bold')
     doc.setFontSize(6)
-    doc.setTextColor(...WHITE)
-    doc.text(isRetrait ? 'BTQ' : 'LIV', M + 9, y + 9.5, { align: 'center' })
+    doc.setTextColor(240, 220, 180)
+    doc.text('EVANGELICAS  \u00B7  KOUROU  \u00B7  GUYANE', W / 2, 17, { align: 'center' })
 
+    y = 28
+
+    // ── TITRE
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(9)
-    doc.setTextColor(...(isRetrait ? GOLD : [37, 99, 235]))
-    doc.text(isRetrait ? 'Retrait en boutique' : 'Livraison a domicile', M + 17, y + 8)
+    doc.setTextColor(...BROWN)
+    doc.text(isRetrait ? 'BON DE RETRAIT' : 'RECU DE COMMANDE', W / 2, y, { align: 'center' })
 
-    doc.setFont('helvetica', 'normal')
-    doc.setFontSize(7.5)
-    doc.setTextColor(...TAUPE)
-    doc.text(
-        isRetrait ? 'Boutique Susy Modas - Kourou, Guyane - Sur presentation de ce recu' : (order.address || ''),
-        M + 17, y + 13.5
-    )
+    // Trait doré sous titre
+    doc.setDrawColor(...GOLD)
+    doc.setLineWidth(0.5)
+    doc.line(W / 2 - 24, y + 2.5, W / 2 + 24, y + 2.5)
 
-    y += 22
-
-    // ─────────────────────────────────────────
-    // TABLEAU ARTICLES
-    // ─────────────────────────────────────────
-    doc.setFont('helvetica', 'bold')
-    doc.setFontSize(7)
-    doc.setTextColor(...TAUPE)
-    doc.text('ARTICLES', M, y)
-    y += 4
-
-    // En-tête tableau
-    doc.setFillColor(...BROWN)
-    doc.rect(M, y, CW, 9, 'F')
-    doc.setFont('helvetica', 'bold')
-    doc.setFontSize(7.5)
-    doc.setTextColor(...WHITE)
-
-    const colImg = M + 1
-    const colNom = M + 20
-    const colTaille = M + CW * 0.56
-    const colQte = M + CW * 0.70
-    const colPrix = M + CW - 3
-
-    doc.text('ARTICLE', colNom, y + 6)
-    doc.text('TAILLE', colTaille, y + 6)
-    doc.text('QTE', colQte, y + 6)
-    doc.text('PRIX', colPrix, y + 6, { align: 'right' })
     y += 9
 
-    // Lignes articles
+    // ── RÉFÉRENCE + DATE sur une ligne
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(7.5)
+    doc.setTextColor(...BROWN)
+    doc.text(order.reference, M, y)
+
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(7)
+    doc.setTextColor(...TAUPE)
+    doc.text(formatDate(order.createdAt), W - M, y, { align: 'right' })
+
+    // Trait séparateur fin
+    doc.setDrawColor(220, 213, 203)
+    doc.setLineWidth(0.2)
+    doc.line(M, y + 3, W - M, y + 3)
+
+    y += 9
+
+    // ── CLIENT — compact, sans bloc
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(8.5)
+    doc.setTextColor(...BROWN)
+    doc.text(`${order.firstName} ${order.lastName}`, M, y)
+
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(7)
+    doc.setTextColor(...TAUPE)
+    doc.text(order.email || '', M, y + 5)
+    doc.text(order.phone || '', W - M, y + 5, { align: 'right' })
+
+    doc.setDrawColor(220, 213, 203)
+    doc.setLineWidth(0.2)
+    doc.line(M, y + 9, W - M, y + 9)
+
+    y += 15
+
+    // ── MODE — bandeau minimaliste
+    doc.setFillColor(...BEIGE)
+    doc.setDrawColor(...GOLD)
+    doc.setLineWidth(0.4)
+    doc.roundedRect(M, y, CW, 11, 1.5, 1.5, 'FD')
+
+    // Accent doré vertical gauche
+    doc.setFillColor(...GOLD)
+    doc.roundedRect(M, y, 2.5, 11, 1, 1, 'F')
+
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(7.5)
+    doc.setTextColor(...GOLD)
+    doc.text(isRetrait ? 'Retrait en boutique  -  Kourou, Guyane' : 'Livraison a domicile', M + 6, y + 5)
+
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(6.5)
+    doc.setTextColor(...TAUPE)
+    doc.text(
+        isRetrait ? 'Sur presentation de ce recu' : (order.address || ''),
+        M + 6, y + 9
+    )
+
+    y += 17
+
+    // ── TABLEAU ARTICLES
+    // En-tête
+    doc.setFillColor(...BROWN)
+    doc.rect(M, y, CW, 7, 'F')
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(6.5)
+    doc.setTextColor(...WHITE)
+
+    const cNom = M + 17
+    const cTail = M + CW * 0.60
+    const cQte = M + CW * 0.74
+    const cPrix = M + CW - 1
+
+    doc.text('ARTICLE', cNom, y + 4.8)
+    doc.text('TAILLE', cTail, y + 4.8)
+    doc.text('QTE', cQte, y + 4.8)
+    doc.text('PRIX', cPrix, y + 4.8, { align: 'right' })
+    y += 7
+
+    // Lignes
     for (let i = 0; i < order.items.length; i++) {
         const item = order.items[i]
-        const rowH = 20
-        const isEven = i % 2 === 0
+        const rowH = 16
 
-        // Fond alternance
-        doc.setFillColor(...(isEven ? WHITE : LGRAY))
+        doc.setFillColor(...(i % 2 === 0 ? WHITE : LGRAY))
         doc.rect(M, y, CW, rowH, 'F')
 
-        // Trait séparateur bas
-        doc.setDrawColor(230, 225, 218)
-        doc.setLineWidth(0.2)
+        doc.setDrawColor(228, 220, 210)
+        doc.setLineWidth(0.15)
         doc.line(M, y + rowH, M + CW, y + rowH)
 
-        // Image produit
+        // Image
         if (item.image) {
             try {
                 const b64 = await imageToBase64(item.image)
-                if (b64) doc.addImage(b64, 'JPEG', colImg + 1, y + 1.5, 15, 17)
+                if (b64) doc.addImage(b64, 'JPEG', M + 1, y + 1, 13, 14)
             } catch { }
         }
 
-        // Nom produit
+        // Nom
         doc.setFont('helvetica', 'bold')
-        doc.setFontSize(8.5)
+        doc.setFontSize(7.5)
         doc.setTextColor(...BROWN)
-        const nomTrim = doc.splitTextToSize(item.name, 70)[0]
-        doc.text(nomTrim, colNom, y + 9)
+        doc.text(doc.splitTextToSize(item.name, 55)[0], cNom, y + 7)
 
         // Taille
         doc.setFont('helvetica', 'normal')
-        doc.setFontSize(8)
+        doc.setFontSize(7)
         doc.setTextColor(...TAUPE)
-        doc.text(item.size || '-', colTaille, y + 9)
+        doc.text(item.size || '-', cTail, y + 7)
 
-        // Quantité
-        doc.text(`x${item.quantity}`, colQte, y + 9)
+        // Qte
+        doc.text(`x${item.quantity}`, cQte, y + 7)
 
         // Prix
         doc.setFont('helvetica', 'bold')
-        doc.setFontSize(8.5)
+        doc.setFontSize(7.5)
         doc.setTextColor(...BROWN)
-        doc.text(formatPrice(item.price * item.quantity), colPrix, y + 9, { align: 'right' })
+        doc.text(formatPrice(item.price * item.quantity), cPrix, y + 7, { align: 'right' })
 
         y += rowH
     }
 
-    y += 4
+    y += 5
 
-    // ─────────────────────────────────────────
-    // TOTAL
-    // ─────────────────────────────────────────
-    doc.setFillColor(...BROWN)
-    doc.roundedRect(M, y, CW, 15, 2, 2, 'F')
-
-    doc.setFont('helvetica', 'bold')
-    doc.setFontSize(9)
-    doc.setTextColor(...WHITE)
-    doc.text('TOTAL PAYE', M + 6, y + 9.5)
-
-    doc.setFontSize(14)
-    doc.setTextColor(...GOLD)
-    doc.text(formatPrice(order.totalAmount), M + CW - 4, y + 10, { align: 'right' })
-
-    y += 20
-
-    // ─────────────────────────────────────────
-    // BADGE PAIEMENT CONFIRMÉ — sans emoji
-    // ─────────────────────────────────────────
-    doc.setFillColor(220, 252, 231)
-    doc.roundedRect(M, y, CW, 11, 2, 2, 'F')
-
-    // Coche dessinée manuellement
-    doc.setDrawColor(22, 163, 74)
-    doc.setLineWidth(1.2)
-    doc.line(M + 8, y + 6, M + 10.5, y + 8.5)
-    doc.line(M + 10.5, y + 8.5, M + 15, y + 3.5)
+    // ── TOTAL — ligne simple élégante
+    doc.setDrawColor(...GOLD)
+    doc.setLineWidth(0.3)
+    doc.line(M, y, W - M, y)
+    y += 5
 
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(8)
-    doc.setTextColor(22, 163, 74)
-    doc.text('Paiement confirme par Stripe', M + 19, y + 7.5)
+    doc.setTextColor(...TAUPE)
+    doc.text('TOTAL PAYE', M, y)
 
-    y += 16
+    doc.setFontSize(11)
+    doc.setTextColor(...BROWN)
+    doc.text(formatPrice(order.totalAmount), W - M, y, { align: 'right' })
 
-    // ─────────────────────────────────────────
-    // MESSAGE RETRAIT EN BOUTIQUE
-    // ─────────────────────────────────────────
+    y += 8
+
+    // ── MESSAGE RETRAIT — discret, juste du texte
     if (isRetrait) {
-        doc.setFillColor(255, 251, 235)
-        doc.setDrawColor(...GOLD)
-        doc.setLineWidth(0.5)
-        doc.roundedRect(M, y, CW, 18, 2, 2, 'FD')
-
-        // Pin dessiné manuellement
-        doc.setFillColor(...GOLD)
-        doc.circle(M + 9, y + 7, 3, 'F')
-        doc.setFillColor(255, 251, 235)
-        doc.circle(M + 9, y + 7, 1.2, 'F')
-        doc.setFillColor(...GOLD)
-        doc.triangle(M + 7.2, y + 9.5, M + 10.8, y + 9.5, M + 9, y + 13, 'F')
-
-        doc.setFont('helvetica', 'bold')
-        doc.setFontSize(8.5)
-        doc.setTextColor(...BROWN)
-        doc.text('Presentez ce document en boutique pour retirer votre commande', M + 16, y + 8)
         doc.setFont('helvetica', 'normal')
-        doc.setFontSize(7.5)
+        doc.setFontSize(6.5)
         doc.setTextColor(...TAUPE)
-        doc.text('Boutique Susy Modas  -  Kourou, Guyane', M + 16, y + 14)
-
-        y += 22
+        doc.text('Presentez ce document a la boutique Susy Modas pour retirer votre commande.', W / 2, y, { align: 'center' })
+        y += 5
     }
 
-    // ─────────────────────────────────────────
-    // FOOTER
-    // ─────────────────────────────────────────
-    doc.setFillColor(...GOLD)
-    doc.rect(0, 284, W, 13, 'F')
+    // ── FOOTER — trait + texte
+    // Calculer position footer en bas de page
+    const footerY = 207
+    doc.setDrawColor(...GOLD)
+    doc.setLineWidth(0.3)
+    doc.line(M, footerY - 3, W - M, footerY - 3)
+
     doc.setFont('helvetica', 'normal')
-    doc.setFontSize(7.5)
-    doc.setTextColor(...WHITE)
-    doc.text('susymodas.com  \u00B7  Boutique de robes chretiennes  \u00B7  Kourou, Guyane', W / 2, 291.5, { align: 'center' })
+    doc.setFontSize(6.5)
+    doc.setTextColor(...TAUPE)
+    doc.text('susymodas.com  \u00B7  Kourou, Guyane  \u00B7  Paiement securise par Stripe', W / 2, footerY + 2, { align: 'center' })
 
     doc.save(`recu-${order.reference}.pdf`)
 }
 
-// ─────────────────────────────────────────────────────────────
-// COMPOSANT PAGE
-// ─────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────
 function SuccesContent() {
     const searchParams = useSearchParams()
     const sessionId = searchParams.get('session_id')
@@ -353,7 +257,7 @@ function SuccesContent() {
         if (!sessionId) { setLoading(false); return }
         fetch(`/api/orders/by-session?session_id=${sessionId}`)
             .then(r => r.json())
-            .then(data => { if (data.error) setError(data.error); else setOrder(data.order) })
+            .then(d => { if (d.error) setError(d.error); else setOrder(d.order) })
             .catch(() => setError('Erreur'))
             .finally(() => setLoading(false))
     }, [sessionId])
@@ -364,7 +268,7 @@ function SuccesContent() {
         if (!order) return
         setGenerating(true)
         try { await generatePDF(order, isRetrait) }
-        catch (e) { console.error(e); alert('Erreur lors de la génération du PDF.') }
+        catch (e) { console.error(e); alert('Erreur PDF.') }
         finally { setGenerating(false) }
     }
 
@@ -377,12 +281,9 @@ function SuccesContent() {
     if (error || !order) return (
         <div className="min-h-screen bg-cream flex items-center justify-center px-4">
             <div className="text-center max-w-md">
-                <div className="text-5xl mb-4">✅</div>
                 <h1 className="font-serif text-3xl text-brown mb-4">Commande confirmée !</h1>
-                <p className="font-sans text-brown-light text-sm leading-relaxed mb-8">
-                    Merci pour votre commande. Vous recevrez une confirmation par email.
-                </p>
-                <Link href="/" className="inline-flex items-center justify-center px-8 py-3 bg-gold text-white font-sans text-xs uppercase tracking-widest rounded-lg hover:bg-rose-deep transition-colors">
+                <p className="font-sans text-brown-light text-sm mb-8">Merci pour votre commande. Vous recevrez une confirmation par email.</p>
+                <Link href="/" className="inline-flex items-center justify-center px-8 py-3 bg-gold text-white font-sans text-xs uppercase tracking-widest rounded-lg">
                     Retour à la boutique
                 </Link>
             </div>
@@ -399,9 +300,7 @@ function SuccesContent() {
                     </div>
                     <h1 className="font-serif text-3xl text-brown mb-2">Commande confirmée !</h1>
                     <p className="font-sans text-brown-light text-sm">
-                        {isRetrait
-                            ? 'Téléchargez votre bon de retrait et présentez-le en boutique.'
-                            : 'Nous vous contacterons pour organiser la livraison.'}
+                        {isRetrait ? 'Téléchargez votre bon de retrait et présentez-le en boutique.' : 'Nous vous contacterons pour organiser la livraison.'}
                     </p>
                 </div>
 
@@ -454,7 +353,6 @@ function SuccesContent() {
                         Retour à la boutique
                     </Link>
                 </div>
-
             </div>
         </div>
     )
