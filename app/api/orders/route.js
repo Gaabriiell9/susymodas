@@ -30,11 +30,9 @@ export async function POST(request) {
   try {
     const body = await request.json()
 
-    // Récupère le user connecté
+    // userId est un CUID (string) — ne pas parser en Number
     const session = await getServerSession(authOptions)
-    const rawId = session?.user?.id
-    const userId = rawId ? Number(rawId) : null
-    console.log('[ORDER] session userId raw:', rawId, '→ parsed:', userId)
+    const userId = session?.user?.id ?? null
 
     // Validation
     const required = ['firstName', 'lastName', 'email', 'phone', 'items']
@@ -80,8 +78,6 @@ export async function POST(request) {
       },
       include: { items: true },
     })
-
-    console.log('[ORDER] created:', order.reference, '| userId in DB:', order.userId)
 
     return NextResponse.json({ order }, { status: 201 })
   } catch (error) {
