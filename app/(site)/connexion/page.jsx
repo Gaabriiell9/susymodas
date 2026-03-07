@@ -12,19 +12,31 @@ function ConnexionForm() {
     const searchParams = useSearchParams()
     const callbackUrl = searchParams.get('callbackUrl') || '/'
 
-    // Lit le paramètre ?mode=register depuis le Header
     const modeParam = searchParams.get('mode')
     const [mode, setMode] = useState(modeParam === 'register' ? 'register' : 'login')
 
     const [loading, setLoading] = useState(false)
     const [showPwd, setShowPwd] = useState(false)
+    const [showConfirmPwd, setShowConfirmPwd] = useState(false)
     const [error, setError] = useState('')
     const [verifyCode, setVerifyCode] = useState('')
     const [verifyError, setVerifyError] = useState('')
     const [resendCooldown, setResendCooldown] = useState(0)
-    const [form, setForm] = useState({ name: '', email: '', password: '' })
+    const [form, setForm] = useState({ name: '', email: '', password: '', confirmPassword: '' })
 
     const inputClass = "w-full border border-gray-200 rounded-xl px-4 py-3 font-sans text-sm text-brown outline-none focus:border-gold transition-all duration-200 bg-white placeholder:text-gray-300"
+
+    // Force du mot de passe
+    function getPasswordStrength(pwd) {
+        if (!pwd) return null
+        if (pwd.length < 6) return { label: 'Trop court', color: 'bg-red-400', width: 'w-1/4' }
+        if (pwd.length < 8) return { label: 'Faible', color: 'bg-orange-400', width: 'w-2/4' }
+        if (!/[A-Z]/.test(pwd) || !/[0-9]/.test(pwd)) return { label: 'Moyen', color: 'bg-yellow-400', width: 'w-3/4' }
+        return { label: 'Fort', color: 'bg-green-400', width: 'w-full' }
+    }
+
+    const strength = mode === 'register' ? getPasswordStrength(form.password) : null
+    const passwordsMatch = form.confirmPassword === '' ? null : form.password === form.confirmPassword
 
     function startCooldown() {
         setResendCooldown(30)
@@ -39,13 +51,17 @@ function ConnexionForm() {
     async function handleSubmit() {
         setError('')
         if (!form.email || !form.password) { setError('Veuillez remplir tous les champs.'); return }
-        if (mode === 'register' && !form.name) { setError('Veuillez entrer votre prénom.'); return }
+        if (mode === 'register') {
+            if (!form.name) { setError('Veuillez entrer votre prénom.'); return }
+            if (form.password.length < 6) { setError('Le mot de passe doit faire au moins 6 caractères.'); return }
+            if (form.password !== form.confirmPassword) { setError('Les mots de passe ne correspondent pas.'); return }
+        }
         setLoading(true)
         try {
             if (mode === 'register') {
                 const res = await fetch('/api/auth/register', {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(form),
+                    body: JSON.stringify({ name: form.name, email: form.email, password: form.password }),
                 })
                 const data = await res.json()
                 if (!res.ok) { setError(data.error); setLoading(false); return }
@@ -121,7 +137,7 @@ function ConnexionForm() {
                                 </label>
                                 <input
                                     className={inputClass + ' tracking-[0.3em] text-center text-base font-medium'}
-                                    placeholder="_ _ _ _"
+                                    placeholder="_ _ _ _ _ _"
                                     value={verifyCode}
                                     maxLength={6}
                                     onChange={e => { setVerifyCode(e.target.value.replace(/\D/g, '')); setVerifyError('') }}
@@ -173,7 +189,9 @@ function ConnexionForm() {
                             </button>
                         ))}
                     </div>
+
                     <div className="space-y-3">
+                        {/* Prénom */}
                         {mode === 'register' && (
                             <div>
                                 <label className="block font-sans text-[0.65rem] uppercase tracking-wider text-taupe mb-1">Prénom *</label>
@@ -181,35 +199,88 @@ function ConnexionForm() {
                                     onChange={e => setForm({ ...form, name: e.target.value })} />
                             </div>
                         )}
+
+                        {/* Email */}
                         <div>
                             <label className="block font-sans text-[0.65rem] uppercase tracking-wider text-taupe mb-1">Email *</label>
                             <input type="email" className={inputClass} placeholder="Adresse email" value={form.email}
                                 onChange={e => setForm({ ...form, email: e.target.value })} />
                         </div>
+
+                        {/* Mot de passe */}
                         <div>
                             <label className="block font-sans text-[0.65rem] uppercase tracking-wider text-taupe mb-1">Mot de passe *</label>
                             <div className="relative">
                                 <input type={showPwd ? 'text' : 'password'} className={inputClass + ' pr-10'}
                                     placeholder="Mot de passe" value={form.password}
                                     onChange={e => setForm({ ...form, password: e.target.value })}
-                                    onKeyDown={e => e.key === 'Enter' && handleSubmit()} />
+                                    onKeyDown={e => e.key === 'Enter' && mode === 'login' && handleSubmit()} />
                                 <button onClick={() => setShowPwd(v => !v)}
                                     className="absolute right-3 top-1/2 -translate-y-1/2 text-taupe hover:text-gold transition-colors">
                                     {showPwd ? <EyeOff size={16} /> : <Eye size={16} />}
                                 </button>
                             </div>
+                            {/* Barre de force du mot de passe */}
+                            {mode === 'register' && form.password && strength && (
+                                <div className="mt-2">
+                                    <div className="h-1 w-full bg-gray-100 rounded-full overflow-hidden">
+                                        <div className={`h-full rounded-full transition-all duration-300 ${strength.color} ${strength.width}`} />
+                                    </div>
+                                    <p className={`font-sans text-[0.6rem] mt-1 ${strength.label === 'Fort' ? 'text-green-500' :
+                                            strength.label === 'Moyen' ? 'text-yellow-500' :
+                                                strength.label === 'Faible' ? 'text-orange-500' : 'text-red-500'
+                                        }`}>
+                                        Force : {strength.label}
+                                    </p>
+                                </div>
+                            )}
                         </div>
+
+                        {/* Confirmation mot de passe — register only */}
+                        {mode === 'register' && (
+                            <div>
+                                <label className="block font-sans text-[0.65rem] uppercase tracking-wider text-taupe mb-1">Confirmer le mot de passe *</label>
+                                <div className="relative">
+                                    <input
+                                        type={showConfirmPwd ? 'text' : 'password'}
+                                        className={inputClass + ' pr-10 ' + (
+                                            passwordsMatch === null ? '' :
+                                                passwordsMatch ? 'border-green-400 focus:border-green-400' : 'border-red-300 focus:border-red-400'
+                                        )}
+                                        placeholder="Répétez votre mot de passe"
+                                        value={form.confirmPassword}
+                                        onChange={e => setForm({ ...form, confirmPassword: e.target.value })}
+                                        onKeyDown={e => e.key === 'Enter' && handleSubmit()}
+                                    />
+                                    <button onClick={() => setShowConfirmPwd(v => !v)}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-taupe hover:text-gold transition-colors">
+                                        {showConfirmPwd ? <EyeOff size={16} /> : <Eye size={16} />}
+                                    </button>
+                                </div>
+                                {/* Feedback correspondance */}
+                                {passwordsMatch === false && (
+                                    <p className="font-sans text-[0.6rem] text-red-500 mt-1">Les mots de passe ne correspondent pas.</p>
+                                )}
+                                {passwordsMatch === true && (
+                                    <p className="font-sans text-[0.6rem] text-green-500 mt-1">✓ Les mots de passe correspondent.</p>
+                                )}
+                            </div>
+                        )}
+
                         {error && <p className="font-sans text-xs text-red-500 bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
+
                         <button onClick={handleSubmit} disabled={loading}
                             className="w-full bg-gold text-white py-3 rounded-xl font-sans text-sm font-medium hover:bg-rose-deep transition-colors disabled:opacity-60 mt-1">
                             {loading ? 'Chargement…' : mode === 'login' ? 'Se connecter' : 'Continuer →'}
                         </button>
                     </div>
+
                     <div className="flex items-center gap-3 my-5">
                         <div className="flex-1 h-px bg-gray-100" />
                         <span className="font-sans text-xs text-taupe">ou</span>
                         <div className="flex-1 h-px bg-gray-100" />
                     </div>
+
                     <button onClick={handleGoogle} disabled={loading}
                         className="w-full flex items-center justify-center gap-3 border border-gray-200 py-3 rounded-xl font-sans text-sm text-brown hover:border-gold hover:bg-beige/30 transition-colors disabled:opacity-60">
                         <svg width="18" height="18" viewBox="0 0 18 18">
@@ -221,6 +292,7 @@ function ConnexionForm() {
                         Continuer avec Google
                     </button>
                 </div>
+
                 <p className="text-center font-sans text-xs text-taupe mt-6">
                     En continuant, vous acceptez nos conditions d&apos;utilisation.
                 </p>
