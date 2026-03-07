@@ -14,7 +14,10 @@ export default function CartSidebar() {
   const [step, setStep] = useState('cart')
   const [saving, setSaving] = useState(false)
   const [delivery, setDelivery] = useState('retrait')
-  const [form, setForm] = useState({ firstName: '', lastName: '', email: '', phone: '', address: '', notes: '' })
+  const [form, setForm] = useState({
+    firstName: '', lastName: '', email: '', phone: '',
+    street: '', city: '', postalCode: '',
+  })
   const [success, setSuccess] = useState(null)
 
   useEffect(() => {
@@ -45,16 +48,24 @@ export default function CartSidebar() {
       alert('Veuillez remplir les champs obligatoires.')
       return
     }
+    if (delivery === 'livraison' && (!form.street || !form.city)) {
+      alert("Veuillez remplir l'adresse complète.")
+      return
+    }
     setSaving(true)
     try {
+      const fullAddress = delivery === 'livraison'
+        ? `${form.street}, ${form.city}${form.postalCode ? ' ' + form.postalCode : ''}`
+        : 'Retrait en boutique — Kourou'
+
       const res = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           firstName: form.firstName, lastName: form.lastName,
           email: form.email, phone: form.phone,
-          address: delivery === 'livraison' ? form.address : 'Retrait en boutique — Kourou',
-          notes: form.notes, paymentMethod: 'STRIPE',
+          address: fullAddress,
+          paymentMethod: 'STRIPE',
           items: items.map(i => ({ productId: i.id, quantity: i.qty, size: i.size })),
         }),
       })
@@ -79,7 +90,7 @@ export default function CartSidebar() {
     }
   }
 
-  const inputClass = "w-full border border-gray-200 rounded-lg px-3 py-2 font-sans text-sm text-brown outline-none focus:border-gold transition-colors"
+  const inputClass = "w-full border border-gray-200 rounded-lg px-3 py-2.5 font-sans text-sm text-brown outline-none focus:border-gold transition-colors"
 
   return (
     <>
@@ -101,6 +112,7 @@ export default function CartSidebar() {
           </div>
         )}
 
+        {/* ── PANIER ── */}
         {step === 'cart' && (
           <>
             <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
@@ -135,6 +147,7 @@ export default function CartSidebar() {
           </>
         )}
 
+        {/* ── CHECKOUT ── */}
         {step === 'checkout' && (
           <>
             <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3">
@@ -142,6 +155,7 @@ export default function CartSidebar() {
                 ← Retour au panier
               </button>
 
+              {/* Récap */}
               <div className="bg-beige/50 rounded-xl p-3 mb-2">
                 {items.map(i => (
                   <div key={`${i.id}-${i.size}`} className="flex justify-between font-sans text-xs text-brown-light">
@@ -154,6 +168,7 @@ export default function CartSidebar() {
                 </div>
               </div>
 
+              {/* Mode récupération */}
               <div>
                 <label className="block font-sans text-[0.65rem] uppercase tracking-wider text-taupe mb-2">Mode de récupération</label>
                 <div className="grid grid-cols-2 gap-2">
@@ -169,6 +184,7 @@ export default function CartSidebar() {
                 </div>
               </div>
 
+              {/* Prénom / Nom */}
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="block font-sans text-[0.65rem] uppercase tracking-wider text-taupe mb-1">Prénom *</label>
@@ -180,27 +196,61 @@ export default function CartSidebar() {
                 </div>
               </div>
 
+              {/* Téléphone */}
               <div>
                 <label className="block font-sans text-[0.65rem] uppercase tracking-wider text-taupe mb-1">Téléphone *</label>
-                <input className={inputClass} value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} placeholder="+594 XX XX XX XX" />
+                <input
+                  type="tel"
+                  inputMode="numeric"
+                  className={inputClass}
+                  value={form.phone}
+                  onChange={e => setForm({ ...form, phone: e.target.value })}
+                  placeholder="Téléphone"
+                />
               </div>
 
+              {/* Email */}
               <div>
                 <label className="block font-sans text-[0.65rem] uppercase tracking-wider text-taupe mb-1">Email</label>
                 <input type="email" className={inputClass} value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
               </div>
 
+              {/* Adresse livraison — 3 champs */}
               {delivery === 'livraison' && (
-                <div>
-                  <label className="block font-sans text-[0.65rem] uppercase tracking-wider text-taupe mb-1">Adresse *</label>
-                  <input className={inputClass} value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} placeholder="Rue, ville, code postal…" />
-                </div>
+                <>
+                  <div>
+                    <label className="block font-sans text-[0.65rem] uppercase tracking-wider text-taupe mb-1">Rue / Adresse *</label>
+                    <input
+                      className={inputClass}
+                      value={form.street}
+                      onChange={e => setForm({ ...form, street: e.target.value })}
+                      placeholder="Numéro et nom de rue"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block font-sans text-[0.65rem] uppercase tracking-wider text-taupe mb-1">Ville *</label>
+                      <input
+                        className={inputClass}
+                        value={form.city}
+                        onChange={e => setForm({ ...form, city: e.target.value })}
+                        placeholder="Kourou"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-sans text-[0.65rem] uppercase tracking-wider text-taupe mb-1">Code postal</label>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        className={inputClass}
+                        value={form.postalCode}
+                        onChange={e => setForm({ ...form, postalCode: e.target.value })}
+                        placeholder="97310"
+                      />
+                    </div>
+                  </div>
+                </>
               )}
-
-              <div>
-                <label className="block font-sans text-[0.65rem] uppercase tracking-wider text-taupe mb-1">Note (taille, couleur…)</label>
-                <textarea className={inputClass} rows={2} value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
-              </div>
             </div>
 
             <div className="border-t border-beige px-6 py-4 space-y-2">
