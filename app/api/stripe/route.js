@@ -13,9 +13,9 @@ export async function POST(request) {
     // Construit les line_items Stripe depuis le panier
     const lineItems = items.map((item) => ({
       price_data: {
-        currency:     'eur',
+        currency: 'eur',
         product_data: {
-          name:   item.name,
+          name: item.name,
           images: item.images?.length ? [item.images[0]] : [],
         },
         unit_amount: Math.round(item.price * 100), // Stripe utilise les centimes
@@ -24,18 +24,18 @@ export async function POST(request) {
     }))
 
     const session = await stripe.checkout.sessions.create({
-      mode:         'payment',
+      mode: 'payment',
       payment_method_types: ['card'],
-      line_items:   lineItems,
+      line_items: lineItems,
       customer_email: customer?.email,
       metadata: {
-        orderId:   orderId?.toString() ?? '',
+        orderId: orderId?.toString() ?? '',
         firstName: customer?.firstName ?? '',
-        lastName:  customer?.lastName ?? '',
-        phone:     customer?.phone ?? '',
+        lastName: customer?.lastName ?? '',
+        phone: customer?.phone ?? '',
       },
       success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/commande/succes?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url:  `${process.env.NEXT_PUBLIC_SITE_URL}/commande/annulee`,
+      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/commande/annulee`,
       locale: 'fr',
     })
 
@@ -43,7 +43,7 @@ export async function POST(request) {
     if (orderId) {
       await prisma.order.update({
         where: { id: parseInt(orderId) },
-        data:  { stripeSessionId: session.id, paymentMethod: 'STRIPE' },
+        data: { stripeSessionId: session.id, paymentMethod: 'STRIPE' },
       })
     }
 

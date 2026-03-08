@@ -11,14 +11,12 @@ export async function GET(request) {
     const active = searchParams.get('active')
 
     const where = {}
-
     if (active === 'false') {
-      // Admin : tous les produits sans filtre
+      // Admin : tous les produits
     } else {
-      // Site public : produits actifs (incluant ceux stock=0 qui sont "Vendu")
+      // Site public : produits actifs (stock=0 inclus → affichés grisés)
       where.active = true
     }
-
     if (size) where.sizes = { has: size }
 
     const products = await prisma.product.findMany({
@@ -35,9 +33,12 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const body = await request.json()
-    const { name, description, price, originalPrice, sizes, colors, tags, stock, active, images, category } = body
+    const { name, description, price, originalPrice, sizes, sizeStock, colors, tags, stock, active, images, category } = body
 
     const slug = await generateSlug(name)
+
+    // Construire sizeStock si non fourni
+    const finalSizeStock = sizeStock ?? buildSizeStock(sizes, parseInt(stock) || 0)
 
     const product = await prisma.product.create({
       data: {
@@ -51,6 +52,7 @@ export async function POST(request) {
         colors: colors || [],
         tags: tags || [],
         stock: parseInt(stock) || 0,
+        sizeStock: finalSizeStock,
         active: active ?? true,
         images: images || [],
       },
@@ -60,6 +62,14 @@ export async function POST(request) {
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
+}
+
+function buildSizeStock(sizes, totalStock) {
+  if (!sizes?.length) return {}
+  const perSize = Math.floor(totalStock / sizes.length) || 1
+  const ss = {}
+  sizes.forEach(s => { ss[s] = perSize })
+  return ss
 }
 
 async function generateSlug(name) {

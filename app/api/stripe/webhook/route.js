@@ -17,7 +17,6 @@ export async function POST(request) {
     return NextResponse.json({ error: 'Webhook invalide' }, { status: 400 })
   }
 
-  // ── Paiement réussi ────────────────────────────────────────────────────────
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object
 
@@ -25,14 +24,55 @@ export async function POST(request) {
       const orderId = session.metadata?.orderId
 
       if (orderId) {
+        // 1. Confirmer la commande
         await prisma.order.update({
           where: { id: parseInt(orderId) },
-          data: {
-            status: 'CONFIRMED',
-            paidAt: new Date(),
-          },
+          data: { status: 'CONFIRMED', paidAt: new Date() },
         })
-        console.log(`✅ Commande #${orderId} payée via Stripe`)
+
+        // 2. Récupérer les articles achetés
+        const orderItems = await prisma.orderItem.findMany({
+          where: { orderId: parseInt(orderId) },
+          include: { product: true },
+        })
+
+        // 3. Mettre à jour le stock de chaque produit
+        for (const item of orderItems) {
+          const product = item.product
+          const size = item.size
+          const qty = item.quantity
+
+          // Récupérer sizeStock actuel
+          const currentSizeStock = (product.sizeStock ?? {})
+
+          // Décrémenter la taille achetée
+          const updatedSizeStock = { ...currentSizeStock }
+          if (size && updatedSizeStock[size] !== undefined) {
+            updatedSizeStock[size] = Math.max(0, updatedSizeStock[size] - qty)
+          }
+
+          // Recalculer sizes = tailles avec stock > 0
+          const updatedSizes = Object.entries(updatedSizeStock)
+            .filter(([, stock]) => stock > 0)
+            .map(([s]) => s)
+
+          // Recalculer stock total
+          const updatedStock = Object.values(updatedSizeStock).reduce((a, b) => a + b, 0)
+
+          await prisma.product.update({
+            where: { id: product.id },
+            data: {
+              sizeStock: updatedSizeStock,
+              sizes: updatedSizes,
+              stock: updatedStock,
+              // active reste true — produit visible même si stock=0 (affiché grisé)
+            },
+          })
+
+          console.log(`📦 ${product.name} | taille ${size} | stock ${product.stock} → ${updatedStock} | tailles dispo: ${updatedSizes.join(', ') || 'aucune'}`)
+        }
+
+        console.log(`✅ Commande #${orderId} confirmée, stocks mis à jour`)
       }
     }
   }
