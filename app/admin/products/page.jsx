@@ -21,7 +21,6 @@ function parseSizeStock(product) {
   return obj
 }
 
-// Menu actions mobile
 function ActionMenu({ product, onEdit, onToggle, onSold, onUndoSold, onDelete }) {
   const [open, setOpen] = useState(false)
   const ref = useRef(null)
@@ -147,10 +146,11 @@ export default function AdminProducts() {
   }
 
   async function markSold(product) {
-    setProducts(prev => prev.map(p => p.id === product.id ? { ...p, stock: 0, active: false } : p))
+    // stock=0 pour griser + active=true pour rester visible sur le site
+    setProducts(prev => prev.map(p => p.id === product.id ? { ...p, stock: 0, active: true } : p))
     await fetch(`/api/products/${product.id}`, {
       method: 'PUT', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ stock: 0, active: false }),
+      body: JSON.stringify({ stock: 0, active: true }),
     })
   }
 
@@ -174,7 +174,6 @@ export default function AdminProducts() {
 
   return (
     <div>
-      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-serif text-2xl text-brown">Produits</h1>
         <button onClick={openCreate} className="flex items-center gap-2 bg-gold text-white px-4 py-2.5 rounded-xl font-sans text-sm hover:bg-rose-deep transition-colors shadow-sm">
@@ -182,7 +181,7 @@ export default function AdminProducts() {
         </button>
       </div>
 
-      {/* ── Vue MOBILE : cards ─────────────────────────────────── */}
+      {/* ── Vue MOBILE ─────────────────────────────────────────── */}
       <div className="block sm:hidden space-y-3">
         {loading ? (
           <p className="p-8 text-center text-gray-400 font-sans text-sm">Chargement…</p>
@@ -191,47 +190,35 @@ export default function AdminProducts() {
         ) : products.map((p) => {
           const isSold = p.stock === 0
           return (
-            <div key={p.id} className={`bg-white rounded-2xl border shadow-sm p-4 flex gap-3 ${isSold ? 'border-red-100 bg-red-50/30' : 'border-gray-100'}`}>
-              {/* Photo */}
+            <div key={p.id} className={`bg-white rounded-2xl border shadow-sm p-4 flex gap-3 ${isSold ? 'border-orange-100 bg-orange-50/20' : 'border-gray-100'}`}>
               <div className="w-16 h-20 rounded-xl overflow-hidden bg-beige flex-shrink-0 relative">
                 {p.images?.[0]
                   ? <Image src={p.images[0]} alt={p.name} fill className={`object-cover object-top ${isSold ? 'grayscale opacity-60' : ''}`} />
                   : <span className="text-2xl flex items-center justify-center h-full">👗</span>}
               </div>
-
-              {/* Infos */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <p className={`font-serif text-sm leading-tight ${isSold ? 'text-gray-400 line-through' : 'text-brown'}`}>{p.name}</p>
                     {isSold
-                      ? <span className="text-[0.6rem] uppercase tracking-wider text-red-400 font-semibold">🔴 Vendu en boutique</span>
+                      ? <span className="text-[0.6rem] uppercase tracking-wider text-orange-400 font-semibold">🏷️ Vendu en boutique</span>
                       : p.tags?.length > 0 && <span className="text-[0.6rem] uppercase tracking-wider text-gold">{p.tags.join(', ')}</span>
                     }
                   </div>
-                  <ActionMenu
-                    product={p}
-                    onEdit={() => openEdit(p)}
-                    onToggle={() => toggleActive(p)}
-                    onSold={() => markSold(p)}
-                    onUndoSold={() => undoSold(p)}
-                    onDelete={() => handleDelete(p)}
-                  />
+                  <ActionMenu product={p} onEdit={() => openEdit(p)} onToggle={() => toggleActive(p)} onSold={() => markSold(p)} onUndoSold={() => undoSold(p)} onDelete={() => handleDelete(p)} />
                 </div>
-
                 <div className="flex items-center gap-2 mt-2 flex-wrap">
                   <span className="font-sans text-sm font-semibold text-brown">{formatPrice(p.price)}</span>
                   {p.originalPrice && <span className="text-xs text-gray-400 line-through">{formatPrice(p.originalPrice)}</span>}
-                  <span className={`px-2 py-0.5 rounded-full text-[0.65rem] font-sans font-medium ${isSold ? 'bg-red-100 text-red-600' : p.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                  <span className={`px-2 py-0.5 rounded-full text-[0.65rem] font-sans font-medium ${isSold ? 'bg-orange-100 text-orange-600' : p.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
                     {isSold ? 'Vendu' : p.active ? 'Actif' : 'Masqué'}
                   </span>
                 </div>
-
                 <div className="flex flex-wrap gap-1 mt-2">
                   {p.sizes?.map(s => (
                     <span key={s} className={`px-2 h-5 rounded text-[0.65rem] font-semibold flex items-center ${isSold ? 'bg-gray-100 text-gray-400' : 'bg-beige text-brown'}`}>{s}</span>
                   ))}
-                  <span className={`text-[0.65rem] self-center ${isSold ? 'text-red-400 font-bold' : 'text-gray-400'}`}>
+                  <span className={`text-[0.65rem] self-center ${isSold ? 'text-orange-400 font-bold' : 'text-gray-400'}`}>
                     ({isSold ? '0' : p.stock} unité{p.stock !== 1 ? 's' : ''})
                   </span>
                 </div>
@@ -241,7 +228,7 @@ export default function AdminProducts() {
         })}
       </div>
 
-      {/* ── Vue DESKTOP : tableau ──────────────────────────────── */}
+      {/* ── Vue DESKTOP ────────────────────────────────────────── */}
       <div className="hidden sm:block bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         {loading ? <p className="p-8 text-center text-gray-400 font-sans text-sm">Chargement…</p> : (
           <table className="w-full">
@@ -256,7 +243,7 @@ export default function AdminProducts() {
               {products.map((p) => {
                 const isSold = p.stock === 0
                 return (
-                  <tr key={p.id} className={`transition-colors ${isSold ? 'bg-red-50/40' : 'hover:bg-gray-50/50'}`}>
+                  <tr key={p.id} className={`transition-colors ${isSold ? 'bg-orange-50/30' : 'hover:bg-gray-50/50'}`}>
                     <td className="px-4 py-3">
                       <div className="w-12 h-14 rounded-lg overflow-hidden bg-beige flex items-center justify-center flex-shrink-0 relative">
                         {p.images?.[0]
@@ -266,15 +253,15 @@ export default function AdminProducts() {
                     </td>
                     <td className="px-4 py-3">
                       <p className={`font-serif text-sm ${isSold ? 'text-gray-400 line-through' : 'text-brown'}`}>{p.name}</p>
-                      {isSold && <span className="text-[0.6rem] uppercase tracking-wider text-red-400 font-semibold">🔴 Vendu en boutique</span>}
+                      {isSold && <span className="text-[0.6rem] uppercase tracking-wider text-orange-400 font-semibold">🏷️ Vendu en boutique</span>}
                       {!isSold && p.tags?.length > 0 && <span className="text-[0.6rem] uppercase tracking-wider text-gold">{p.tags.join(', ')}</span>}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap gap-1">
                         {p.sizes?.map(s => (
-                          <span key={s} className={`inline-flex items-center justify-center px-2 h-6 rounded font-sans text-xs font-semibold ${isSold ? 'bg-gray-100 text-gray-400 line-through' : 'bg-beige text-brown'}`}>{s}</span>
+                          <span key={s} className={`inline-flex items-center justify-center px-2 h-6 rounded font-sans text-xs font-semibold ${isSold ? 'bg-gray-100 text-gray-400' : 'bg-beige text-brown'}`}>{s}</span>
                         ))}
-                        <span className={`text-[0.65rem] ml-1 self-center ${isSold ? 'text-red-400 font-bold' : 'text-gray-400'}`}>
+                        <span className={`text-[0.65rem] ml-1 self-center ${isSold ? 'text-orange-400 font-bold' : 'text-gray-400'}`}>
                           {isSold ? '0 unité' : `(${p.stock} unité${p.stock > 1 ? 's' : ''})`}
                         </span>
                       </div>
@@ -284,8 +271,8 @@ export default function AdminProducts() {
                       {p.originalPrice && <span className="text-xs text-gray-400 line-through ml-1">{formatPrice(p.originalPrice)}</span>}
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`px-2.5 py-1 rounded-full text-xs font-sans font-medium ${isSold ? 'bg-red-100 text-red-600' : p.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                        {isSold ? '🔴 Vendu' : p.active ? 'Actif' : 'Masqué'}
+                      <span className={`px-2.5 py-1 rounded-full text-xs font-sans font-medium ${isSold ? 'bg-orange-100 text-orange-600' : p.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                        {isSold ? '🏷️ Vendu' : p.active ? 'Actif' : 'Masqué'}
                       </span>
                     </td>
                     <td className="px-4 py-3">
@@ -310,11 +297,10 @@ export default function AdminProducts() {
         )}
       </div>
 
-      {/* ── Modal (même sur mobile) ────────────────────────────── */}
+      {/* ── Modal ─────────────────────────────────────────────── */}
       {modal && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-end sm:items-center justify-center">
           <div className="bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl w-full sm:max-w-lg max-h-[92vh] overflow-y-auto">
-            {/* Handle mobile */}
             <div className="flex justify-center pt-3 pb-1 sm:hidden">
               <div className="w-10 h-1 bg-gray-200 rounded-full" />
             </div>
@@ -327,7 +313,6 @@ export default function AdminProducts() {
               </div>
 
               <div className="space-y-4">
-                {/* Photos */}
                 <div>
                   <label className="block font-sans text-xs uppercase tracking-wider text-taupe mb-2">Photos</label>
                   {form.images.length > 0 && (
@@ -349,19 +334,16 @@ export default function AdminProducts() {
                   </button>
                 </div>
 
-                {/* Nom */}
                 <div>
                   <label className="block font-sans text-xs uppercase tracking-wider text-taupe mb-1">Nom *</label>
                   <input className={inputClass} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
                 </div>
 
-                {/* Description */}
                 <div>
                   <label className="block font-sans text-xs uppercase tracking-wider text-taupe mb-1">Description</label>
                   <textarea className={inputClass} rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
                 </div>
 
-                {/* Prix */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block font-sans text-xs uppercase tracking-wider text-taupe mb-1">Prix (€) *</label>
@@ -373,7 +355,6 @@ export default function AdminProducts() {
                   </div>
                 </div>
 
-                {/* Tailles */}
                 <div>
                   <label className="block font-sans text-xs uppercase tracking-wider text-taupe mb-2">
                     Tailles & unités {totalStock > 0 && <span className="text-gold ml-1">— {totalStock} unité{totalStock > 1 ? 's' : ''}</span>}
@@ -403,26 +384,22 @@ export default function AdminProducts() {
                   )}
                 </div>
 
-                {/* Couleurs */}
                 <div>
                   <label className="block font-sans text-xs uppercase tracking-wider text-taupe mb-1">Couleurs</label>
                   <input className={inputClass} value={form.colors.join(', ')} onChange={(e) => setForm({ ...form, colors: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })} placeholder="Noir, Blanc, Rose…" />
                 </div>
 
-                {/* Tags */}
                 <div>
                   <label className="block font-sans text-xs uppercase tracking-wider text-taupe mb-1">Tags</label>
                   <input className={inputClass} value={form.tags.join(', ')} onChange={(e) => setForm({ ...form, tags: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })} placeholder="nouveau, exclusif, promo…" />
                 </div>
 
-                {/* Visible */}
                 <label className="flex items-center gap-3 cursor-pointer p-3 rounded-xl bg-gray-50 hover:bg-beige/30 transition-colors">
                   <input type="checkbox" checked={form.active} onChange={(e) => setForm({ ...form, active: e.target.checked })} className="w-4 h-4 rounded border-gray-300 accent-gold" />
                   <span className="font-sans text-sm text-gray-600">Produit visible sur le site</span>
                 </label>
               </div>
 
-              {/* Boutons */}
               <div className="flex gap-3 mt-6 pt-4 border-t border-gray-100">
                 <button onClick={() => setModal(false)} className="flex-1 border border-gray-200 text-gray-600 py-3 rounded-xl font-sans text-sm hover:bg-gray-50 transition-colors active:scale-98">Annuler</button>
                 <button onClick={handleSave} disabled={saving} className="flex-1 bg-gold text-white py-3 rounded-xl font-sans text-sm hover:bg-rose-deep transition-colors disabled:opacity-60 active:scale-98">

@@ -1,3 +1,4 @@
+// app/api/products/route.js
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 
@@ -10,7 +11,14 @@ export async function GET(request) {
     const active = searchParams.get('active')
 
     const where = {}
-    if (active !== 'false') where.active = true
+
+    if (active === 'false') {
+      // Admin : tous les produits sans filtre
+    } else {
+      // Site public : produits actifs (incluant ceux stock=0 qui sont "Vendu")
+      where.active = true
+    }
+
     if (size) where.sizes = { has: size }
 
     const products = await prisma.product.findMany({
