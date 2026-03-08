@@ -22,17 +22,22 @@ export async function GET(request) {
     },
     orderBy: { createdAt: 'desc' },
   })
+
   return NextResponse.json({ orders })
 }
 
-// ── POST /api/orders ── crée une commande et lie au user connecté
+// ── POST /api/orders ── crée une commande
 export async function POST(request) {
   try {
     const body = await request.json()
 
-    // userId est un CUID (string) — ne pas parser en Number
+    // Récupérer userId et vérifier qu'il existe vraiment en DB
     const session = await getServerSession(authOptions)
-    const userId = session?.user?.id ?? null
+    let userId = null
+    if (session?.user?.id) {
+      const userExists = await prisma.user.findUnique({ where: { id: session.user.id } })
+      if (userExists) userId = session.user.id
+    }
 
     // Validation
     const required = ['firstName', 'lastName', 'email', 'phone', 'items']
@@ -46,7 +51,6 @@ export async function POST(request) {
     // Vérifie les produits et calcule le total
     let totalAmount = 0
     const itemsData = []
-
     for (const item of body.items) {
       const product = await prisma.product.findUnique({ where: { id: item.productId } })
       if (!product || !product.active) {
