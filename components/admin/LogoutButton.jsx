@@ -1,10 +1,9 @@
 'use client'
-
 import { LogOut } from 'lucide-react'
 
 export default function LogoutButton() {
   async function handleLogout() {
-    await fetch('/api/auth', { method: 'DELETE' })
+    await fetch('/api/admin-auth', { method: 'DELETE' })
     window.location.href = '/admin/login'
   }
 

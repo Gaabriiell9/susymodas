@@ -1,5 +1,4 @@
 'use client'
-
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
@@ -13,20 +12,17 @@ export default function AdminLogin() {
     e.preventDefault()
     setLoading(true)
     setError('')
-
-    const res = await fetch('/api/auth', {
+    const res = await fetch('/api/admin-auth', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(form),
     })
     const data = await res.json()
-
     if (!res.ok) {
       setError(data.error)
       setLoading(false)
       return
     }
-
     router.push('/admin')
     router.refresh()
   }
@@ -34,8 +30,6 @@ export default function AdminLogin() {
   return (
     <div className="min-h-screen bg-cream flex items-center justify-center px-4">
       <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-sm border border-gold-light">
-
-        {/* Logo */}
         <div className="text-center mb-8">
           <div className="w-14 h-14 mx-auto mb-4 flex items-center justify-center">
             <svg width="56" height="56" viewBox="0 0 44 44" fill="none">
@@ -50,44 +44,22 @@ export default function AdminLogin() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block font-sans text-xs uppercase tracking-wider text-taupe mb-1.5">
-              Email
-            </label>
-            <input
-              type="email"
-              value={form.email}
+            <label className="block font-sans text-xs uppercase tracking-wider text-taupe mb-1.5">Email</label>
+            <input type="email" value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
               className="w-full border border-gold-light rounded-lg px-4 py-2.5 font-sans text-sm text-brown outline-none focus:border-gold transition-colors"
-              placeholder="admin@susymodas.fr"
-              required
-            />
+              placeholder="admin@susymodas.fr" required />
           </div>
-
           <div>
-            <label className="block font-sans text-xs uppercase tracking-wider text-taupe mb-1.5">
-              Mot de passe
-            </label>
-            <input
-              type="password"
-              value={form.password}
+            <label className="block font-sans text-xs uppercase tracking-wider text-taupe mb-1.5">Mot de passe</label>
+            <input type="password" value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
               className="w-full border border-gold-light rounded-lg px-4 py-2.5 font-sans text-sm text-brown outline-none focus:border-gold transition-colors"
-              placeholder="••••••••"
-              required
-            />
+              placeholder="••••••••" required />
           </div>
-
-          {error && (
-            <p className="text-xs text-rose-deep font-sans bg-rose-deep/10 px-3 py-2 rounded-lg">
-              {error}
-            </p>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-gold text-white font-sans text-xs uppercase tracking-widest py-3 rounded-lg hover:bg-rose-deep transition-colors disabled:opacity-60"
-          >
+          {error && <p className="text-xs text-rose-deep font-sans bg-rose-deep/10 px-3 py-2 rounded-lg">{error}</p>}
+          <button type="submit" disabled={loading}
+            className="w-full bg-gold text-white font-sans text-xs uppercase tracking-widest py-3 rounded-lg hover:bg-rose-deep transition-colors disabled:opacity-60">
             {loading ? 'Connexion…' : 'Se connecter'}
           </button>
         </form>
