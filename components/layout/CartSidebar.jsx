@@ -9,7 +9,7 @@ import Button from '@/components/ui/Button'
 import { useSession, signIn } from 'next-auth/react'
 
 export default function CartSidebar() {
-  const { isOpen, items, total, closeCart, updateQty, removeItem } = useCart()
+  const { isOpen, items, total, closeCart, updateQty, removeItem, clearCart } = useCart()
   const { data: session } = useSession()
   const [step, setStep] = useState('cart')
   const [saving, setSaving] = useState(false)
@@ -82,7 +82,12 @@ export default function CartSidebar() {
         }),
       })
       const stripeData = await stripeRes.json()
-      if (stripeData.url) window.location.href = stripeData.url
+
+      if (stripeData.url) {
+        // Vider le panier avant de rediriger vers Stripe
+        clearCart()
+        window.location.href = stripeData.url
+      }
     } catch (err) {
       alert('Erreur : ' + err.message)
     } finally {
@@ -199,14 +204,8 @@ export default function CartSidebar() {
               {/* Téléphone */}
               <div>
                 <label className="block font-sans text-[0.65rem] uppercase tracking-wider text-taupe mb-1">Téléphone *</label>
-                <input
-                  type="tel"
-                  inputMode="numeric"
-                  className={inputClass}
-                  value={form.phone}
-                  onChange={e => setForm({ ...form, phone: e.target.value })}
-                  placeholder="Téléphone"
-                />
+                <input type="tel" inputMode="numeric" className={inputClass} value={form.phone}
+                  onChange={e => setForm({ ...form, phone: e.target.value })} placeholder="Téléphone" />
               </div>
 
               {/* Email */}
@@ -215,38 +214,24 @@ export default function CartSidebar() {
                 <input type="email" className={inputClass} value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
               </div>
 
-              {/* Adresse livraison — 3 champs */}
+              {/* Adresse livraison */}
               {delivery === 'livraison' && (
                 <>
                   <div>
                     <label className="block font-sans text-[0.65rem] uppercase tracking-wider text-taupe mb-1">Rue / Adresse *</label>
-                    <input
-                      className={inputClass}
-                      value={form.street}
-                      onChange={e => setForm({ ...form, street: e.target.value })}
-                      placeholder="Numéro et nom de rue"
-                    />
+                    <input className={inputClass} value={form.street}
+                      onChange={e => setForm({ ...form, street: e.target.value })} placeholder="Numéro et nom de rue" />
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
                       <label className="block font-sans text-[0.65rem] uppercase tracking-wider text-taupe mb-1">Ville *</label>
-                      <input
-                        className={inputClass}
-                        value={form.city}
-                        onChange={e => setForm({ ...form, city: e.target.value })}
-                        placeholder="Kourou"
-                      />
+                      <input className={inputClass} value={form.city}
+                        onChange={e => setForm({ ...form, city: e.target.value })} placeholder="Kourou" />
                     </div>
                     <div>
                       <label className="block font-sans text-[0.65rem] uppercase tracking-wider text-taupe mb-1">Code postal</label>
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        className={inputClass}
-                        value={form.postalCode}
-                        onChange={e => setForm({ ...form, postalCode: e.target.value })}
-                        placeholder="97310"
-                      />
+                      <input type="text" inputMode="numeric" className={inputClass} value={form.postalCode}
+                        onChange={e => setForm({ ...form, postalCode: e.target.value })} placeholder="97310" />
                     </div>
                   </div>
                 </>
@@ -288,9 +273,7 @@ function CartItem({ item, onQtyChange, onRemove }) {
             <button onClick={() => onQtyChange(item.id, item.qty - 1, item.size)}
               className="w-6 h-6 rounded bg-beige flex items-center justify-center hover:bg-gold-light transition-colors text-xs">−</button>
             <span className="font-sans text-sm w-4 text-center">{item.qty}</span>
-            <button
-              onClick={() => !atMax && onQtyChange(item.id, item.qty + 1, item.size)}
-              disabled={atMax}
+            <button onClick={() => !atMax && onQtyChange(item.id, item.qty + 1, item.size)} disabled={atMax}
               title={atMax ? `Stock max atteint (${item.maxStock})` : undefined}
               className={`w-6 h-6 rounded flex items-center justify-center transition-colors text-xs ${atMax ? 'bg-gray-100 text-gray-300 cursor-not-allowed' : 'bg-beige hover:bg-gold-light'}`}>+</button>
           </div>
