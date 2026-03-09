@@ -7,7 +7,6 @@ export default function BannerVerse() {
       </span>
 
       <div className="relative z-10 mx-auto max-w-7xl flex flex-col md:flex-row items-center justify-between gap-10">
-
         {/* Verset */}
         <div className="max-w-xl">
           <blockquote
@@ -21,25 +20,27 @@ export default function BannerVerse() {
           </cite>
         </div>
 
-        {/* Carte promo */}
-        <div className="flex-shrink-0 border border-gold/30 rounded-xl p-8 text-center bg-white/5">
-          <p className="font-sans text-[0.65rem] tracking-[0.22em] uppercase text-gold mb-2">
-            Offre spéciale
+        {/* Carte annonce ouverture */}
+        <div className="flex-shrink-0 border border-gold/30 rounded-xl p-8 text-center bg-white/5 max-w-xs">
+          <p className="font-sans text-[0.65rem] tracking-[0.22em] uppercase text-gold mb-3">
+            🎉 Ouverture du site
           </p>
-          <p
-            className="font-serif font-light text-white leading-none"
-            style={{ fontSize: '4rem' }}
-          >
-            −20<span className="text-3xl">%</span>
+          <p className="font-serif font-light text-white text-lg leading-snug mb-1">
+            Pour fêter notre lancement,
           </p>
-          <p className="font-sans text-xs text-white/50 mt-2">
-            Sur votre première commande
+          <p className="font-serif font-light text-white leading-none mb-3" style={{ fontSize: '3.5rem' }}>
+            −10<span className="text-2xl">%</span>
           </p>
-          <div className="mt-4 border border-dashed border-gold/40 rounded-md px-4 py-2 font-sans text-sm tracking-[0.2em] text-gold-light">
-            SUSY2025
+          <p className="font-sans text-xs text-white/50 mb-4">
+            sur votre première commande
+          </p>
+          <div className="border border-dashed border-gold/40 rounded-md px-4 py-2 font-sans text-sm tracking-[0.2em] text-gold-light">
+            SUSY2026
           </div>
+          <p className="font-sans text-[0.6rem] text-white/30 mt-3">
+            Code à saisir lors du paiement
+          </p>
         </div>
-
       </div>
     </section>
   )
