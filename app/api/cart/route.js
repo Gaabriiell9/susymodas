@@ -1,14 +1,13 @@
+// app/api/cart/route.js
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/app/api/auth/[...nextauth]/route'
 import prisma from '@/lib/prisma'
 
-// Calcule le stock max pour une taille donnée
 function getMaxStock(product, size) {
     if (!size || !product.sizes?.length) return product.stock ?? 1
     const idx = product.sizes.indexOf(size)
     if (idx === -1) return product.stock ?? 1
-    // Stock réparti équitablement entre les tailles
     return Math.floor(product.stock / product.sizes.length) || 1
 }
 
@@ -21,16 +20,18 @@ export async function GET() {
         include: { product: true },
     })
 
-    const items = cartItems.map(c => ({
-        id: c.product.id,
-        name: c.product.name,
-        price: c.product.price,
-        size: c.size,
-        qty: c.quantity,
-        images: c.product.images,
-        // On recalcule maxStock à chaque chargement depuis la DB
-        maxStock: getMaxStock(c.product, c.size),
-    }))
+    // Filtrer les items dont le produit n'a plus de stock pour cette taille
+    const items = cartItems
+        .filter(c => c.product.active)
+        .map(c => ({
+            id: c.product.id,
+            name: c.product.name,
+            price: c.product.price,
+            size: c.size,
+            qty: c.quantity,
+            images: c.product.images,
+            maxStock: getMaxStock(c.product, c.size),
+        }))
 
     return NextResponse.json({ items })
 }
@@ -41,17 +42,13 @@ export async function POST(request) {
 
     const { productId, quantity, size } = await request.json()
 
-    // Vérifier le stock avant d'ajouter
     const product = await prisma.product.findUnique({ where: { id: productId } })
     if (!product) return NextResponse.json({ error: 'Produit introuvable' }, { status: 404 })
 
     const maxStock = getMaxStock(product, size)
-
-    // Récupérer la quantité déjà dans le panier
     const existing = await prisma.cartItem.findUnique({
         where: { userId_productId_size: { userId: session.user.id, productId, size: size ?? '' } }
     })
-
     const currentQty = existing?.quantity ?? 0
     const newQty = Math.min(currentQty + quantity, maxStock)
 
@@ -69,11 +66,19 @@ export async function DELETE(request) {
     if (!session?.user?.id) return NextResponse.json({ error: 'Non connecté' }, { status: 401 })
 
     const { searchParams } = new URL(request.url)
-    const productId = parseInt(searchParams.get('productId'))
+    const productId = searchParams.get('productId')
 
-    await prisma.cartItem.deleteMany({
-        where: { userId: session.user.id, productId },
-    })
+    if (productId) {
+        // Supprimer un article spécifique
+        await prisma.cartItem.deleteMany({
+            where: { userId: session.user.id, productId: parseInt(productId) },
+        })
+    } else {
+        // Vider tout le panier (appelé après paiement)
+        await prisma.cartItem.deleteMany({
+            where: { userId: session.user.id },
+        })
+    }
 
     return NextResponse.json({ success: true })
 }

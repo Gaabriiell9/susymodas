@@ -10,7 +10,6 @@ function cartReducer(state, action) {
       const existing = state.items.find((i) => i.id === action.payload.id && i.size === action.payload.size)
       if (existing) {
         const newQty = existing.qty + 1
-        // Respecter le stock max
         if (existing.maxStock !== undefined && newQty > existing.maxStock) return state
         return {
           ...state, items: state.items.map((i) =>
@@ -28,7 +27,6 @@ function cartReducer(state, action) {
       return {
         ...state, items: state.items.map((i) => {
           if (i.id !== id || i.size !== size) return i
-          // Bloquer au-delà du stock max
           const capped = i.maxStock !== undefined ? Math.min(qty, i.maxStock) : qty
           return { ...i, qty: capped }
         })
@@ -83,7 +81,6 @@ export function CartProvider({ children }) {
     }
   }, [session])
 
-  // removeItem accepte maintenant (id, size)
   const removeItem = useCallback(async (id, size) => {
     dispatch({ type: 'REMOVE_ITEM', payload: { id, size } })
     if (session?.user) {
@@ -91,12 +88,20 @@ export function CartProvider({ children }) {
     }
   }, [session])
 
-  // updateQty accepte maintenant (id, qty, size)
   const updateQty = useCallback((id, qty, size) => {
     dispatch({ type: 'UPDATE_QTY', payload: { id, qty, size } })
   }, [])
 
-  const clearCart = useCallback(() => dispatch({ type: 'CLEAR_CART' }), [])
+  const clearCart = useCallback(async () => {
+    dispatch({ type: 'CLEAR_CART' })
+    // Vider aussi le panier en DB
+    if (session?.user) {
+      await fetch('/api/cart', { method: 'DELETE' }).catch(() => { })
+    } else {
+      try { localStorage.removeItem('susy_cart') } catch { }
+    }
+  }, [session])
+
   const openCart = useCallback(() => dispatch({ type: 'OPEN_CART' }), [])
   const closeCart = useCallback(() => dispatch({ type: 'CLOSE_CART' }), [])
   const toggleCart = useCallback(() => dispatch({ type: 'TOGGLE_CART' }), [])
