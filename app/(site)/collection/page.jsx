@@ -31,19 +31,23 @@ export default async function CollectionPage({ searchParams }) {
   ])
   const { title, kicker } = heading({ categorie, q, promo, tri: searchParams.tri })
 
-  const chip = (active) => cn('shrink-0 border px-4 py-2 text-[12px] uppercase tracking-[0.12em] transition', active ? 'border-ink bg-ink text-ivory' : 'border-line hover:border-ink')
+  const tab = (active) => cn('shrink-0 whitespace-nowrap border-b-2 py-3 transition-colors duration-short', active ? 'border-accent text-ink' : 'border-transparent text-ink-2 hover:border-ink')
 
   return (
     <>
-      <section className="shop-container pb-8 pt-10 text-center lg:pt-14">
-        <p className="label text-ink-muted">{kicker}</p>
-        <h1 className="display mt-3 text-5xl lg:text-6xl">{title}</h1>
-        <nav className="no-scrollbar -mx-4 mt-8 flex gap-2 overflow-x-auto px-4 sm:justify-center">
-          <Link href="/collection" className={chip(!categorie && !promo && !q)}>Tout</Link>
-          {CATEGORIES.map((c) => (
-            <Link key={c.id} href={`/collection?categorie=${c.id}`} className={chip(categorie === c.id)}>{c.label}</Link>
-          ))}
-          <Link href="/collection?promo=1" className={cn(chip(promo), !promo && 'text-sale')}>Promotions</Link>
+      <section className="shop-container pt-12 lg:pt-16">
+        <div className="grid items-end gap-6 lg:grid-cols-12">
+          <h1 className="text-display-s lg:col-span-8">{title}</h1>
+          <p className="text-muted lg:col-span-4 lg:text-right">{kicker}, {products.length} article{products.length > 1 ? 's' : ''}</p>
+        </div>
+        <nav aria-label="Catégories" className="no-scrollbar -mx-gutter mt-12 overflow-x-auto px-gutter">
+          <ul className="flex gap-8 border-b border-rule">
+            <li><Link href="/collection" aria-current={!categorie && !promo && !q ? 'page' : undefined} className={tab(!categorie && !promo && !q)}>Tout</Link></li>
+            {CATEGORIES.map((c) => (
+              <li key={c.id}><Link href={`/collection?categorie=${c.id}`} aria-current={categorie === c.id ? 'page' : undefined} className={tab(categorie === c.id)}>{c.label}</Link></li>
+            ))}
+            <li><Link href="/collection?promo=1" aria-current={promo ? 'page' : undefined} className={cn(tab(promo), 'text-accent')}>Promotions</Link></li>
+          </ul>
         </nav>
       </section>
 
@@ -51,16 +55,18 @@ export default async function CollectionPage({ searchParams }) {
         <CollectionToolbar sizes={sizes} count={products.length} />
       </Suspense>
 
-      <section className="shop-container py-10">
+      <section className="shop-container pb-section pt-12">
         {products.length ? (
-          <div className="grid grid-cols-2 gap-x-3 gap-y-10 sm:gap-x-5 md:grid-cols-3 xl:grid-cols-4">
+          <div className="grid grid-cols-2 gap-x-8 gap-y-16 max-sm:gap-x-4 md:grid-cols-3 xl:grid-cols-4">
             {products.map((p, i) => <ProductCard key={p.id} product={p} priority={i < 4} />)}
           </div>
         ) : (
-          <div className="py-24 text-center">
-            <p className="display text-3xl">Aucun article ne correspond</p>
-            <p className="mt-3 text-[14px] text-ink-muted">Essayez une autre taille ou une autre catégorie.</p>
-            <Link href="/collection" className="btn-outline mt-8">Voir toute la collection</Link>
+          <div className="rule-ink grid gap-6 py-16 lg:grid-cols-12">
+            <p className="display text-[2.5rem] lg:col-span-7">Aucun article ne correspond</p>
+            <div className="lg:col-span-4 lg:col-start-9">
+              <p className="text-muted">Essayez une autre taille ou une autre catégorie.</p>
+              <Link href="/collection" className="btn-outline mt-6">Voir toute la collection</Link>
+            </div>
           </div>
         )}
       </section>

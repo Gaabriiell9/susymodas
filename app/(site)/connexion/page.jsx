@@ -11,7 +11,7 @@ export default async function ConnexionPage() {
   if (session?.user) redirect('/compte')
   const google = !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET)
   return (
-    <div className="shop-container flex justify-center py-14 lg:py-20">
+    <div className="shop-container py-16 lg:py-24">
       <Suspense><AuthForm google={google} /></Suspense>
     </div>
   )

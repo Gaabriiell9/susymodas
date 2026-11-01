@@ -36,18 +36,18 @@ export default function CollectionToolbar({ sizes, count }) {
 
   return (
     <>
-      <div className="sticky top-16 z-30 border-y border-line bg-ivory/95 backdrop-blur lg:top-[76px]">
-        <div className="shop-container flex h-12 items-center justify-between gap-4">
-          <button onClick={() => setOpen(true)} className="label flex items-center gap-2">
-            <SlidersHorizontal size={15} strokeWidth={1.4} /> Filtrer{activeCount ? ` (${activeCount})` : ''}
+      <div className="sticky top-[74px] z-sticky border-b border-rule bg-paper">
+        <div className="shop-container flex min-h-14 items-center justify-between gap-4">
+          <button type="button" onClick={() => setOpen(true)} className="inline-flex min-h-11 items-center gap-2 font-medium hover:text-accent">
+            <SlidersHorizontal size={17} strokeWidth={1.5} aria-hidden="true" /> Filtrer{activeCount ? ` (${activeCount})` : ''}
           </button>
-          <p className="hidden text-[13px] text-ink-muted sm:block">{count} article{count > 1 ? 's' : ''}</p>
-          <label className="flex items-center gap-2">
-            <span className="label hidden text-ink-muted sm:inline">Trier</span>
+          <label className="flex items-center gap-3">
+            <span className="hidden text-muted sm:inline">Trier par</span>
             <select
               value={current.tri}
               onChange={(e) => update({ tri: e.target.value === 'selection' ? '' : e.target.value })}
-              className="cursor-pointer bg-transparent text-[13px] outline-none"
+              className="field min-h-11 w-auto py-2"
+              name="tri"
             >
               {SORTS.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
             </select>
@@ -56,43 +56,45 @@ export default function CollectionToolbar({ sizes, count }) {
       </div>
 
       {open && (
-        <div className="fixed inset-0 z-50">
-          <div className="absolute inset-0 animate-fade bg-ink/40" onClick={() => setOpen(false)} />
-          <aside className="absolute inset-y-0 left-0 flex w-full max-w-sm animate-slide-in-left flex-col bg-ivory">
-            <div className="flex h-16 items-center justify-between border-b border-line px-6">
-              <p className="label">Filtres</p>
-              <button onClick={() => setOpen(false)} className="-mr-2 p-2" aria-label="Fermer"><X size={22} strokeWidth={1.3} /></button>
+        <div className="fixed inset-0 z-modal" role="dialog" aria-modal="true" aria-label="Filtres">
+          <div className="absolute inset-0 animate-fade bg-ink/40 motion-reduce:animate-none" onClick={() => setOpen(false)} />
+          <aside className="absolute inset-y-0 left-0 flex w-full max-w-sm animate-slide-in-left flex-col bg-paper motion-reduce:animate-none">
+            <div className="flex h-[72px] items-center justify-between border-b-2 border-rule-ink px-6">
+              <p className="font-medium">Filtres</p>
+              <button type="button" onClick={() => setOpen(false)} className="-mr-3 inline-flex h-11 w-11 items-center justify-center hover:text-accent" aria-label="Fermer les filtres"><X size={22} strokeWidth={1.5} /></button>
             </div>
             <div className="flex-1 space-y-10 overflow-y-auto px-6 py-8">
-              <div>
-                <p className="label mb-4">Taille</p>
+              <fieldset>
+                <legend className="mb-4 font-medium">Taille</legend>
                 {sizes.length ? (
                   <div className="grid grid-cols-4 gap-2">
                     {sizes.map((s) => (
                       <button
                         key={s}
+                        type="button"
+                        aria-pressed={current.taille === s}
                         onClick={() => update({ taille: current.taille === s ? '' : s })}
-                        className={cn('h-11 border text-[13px] transition', current.taille === s ? 'border-ink bg-ink text-ivory' : 'border-line hover:border-ink')}
+                        className={cn('h-12 border transition-colors duration-micro', current.taille === s ? 'border-ink bg-ink text-paper' : 'border-muted hover:bg-paper-2')}
                       >
                         {s === 'TU' ? 'Unique' : s}
                       </button>
                     ))}
                   </div>
-                ) : <p className="text-[13px] text-ink-muted">Aucune taille disponible.</p>}
-              </div>
-              <div>
-                <p className="label mb-4">Disponibilité</p>
-                <button onClick={() => update({ dispo: !current.dispo })} className="flex items-center gap-3 text-[14px]">
-                  <span className={cn('flex h-5 w-5 items-center justify-center border', current.dispo ? 'border-ink bg-ink text-ivory' : 'border-ink-muted')}>
-                    {current.dispo && <Check size={13} />}
+                ) : <p className="text-muted">Aucune taille disponible.</p>}
+              </fieldset>
+              <fieldset>
+                <legend className="mb-4 font-medium">Disponibilité</legend>
+                <button type="button" aria-pressed={current.dispo} onClick={() => update({ dispo: !current.dispo })} className="inline-flex min-h-11 items-center gap-3">
+                  <span className={cn('flex h-5 w-5 items-center justify-center border', current.dispo ? 'border-ink bg-ink text-paper' : 'border-muted')}>
+                    {current.dispo && <Check size={13} aria-hidden="true" />}
                   </span>
                   En stock uniquement
                 </button>
-              </div>
+              </fieldset>
             </div>
-            <div className="grid grid-cols-2 gap-3 border-t border-line p-6">
-              <button onClick={() => update({ taille: '', dispo: false })} className="btn-ghost">Effacer</button>
-              <button onClick={() => setOpen(false)} className="btn-dark">Voir ({count})</button>
+            <div className="grid grid-cols-2 gap-3 border-t border-rule p-6">
+              <button type="button" onClick={() => update({ taille: '', dispo: false })} className="btn-outline">Effacer</button>
+              <button type="button" onClick={() => setOpen(false)} className="btn-primary">Voir {count}</button>
             </div>
           </aside>
         </div>

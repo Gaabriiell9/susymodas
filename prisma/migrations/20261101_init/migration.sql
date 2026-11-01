@@ -131,7 +131,7 @@ CREATE TABLE "StoreSettings" (
     "storeAddress" TEXT NOT NULL DEFAULT 'Kourou, Guyane française',
     "storeHours" TEXT NOT NULL DEFAULT 'Du mardi au samedi, 9h-12h30 et 15h-19h',
     "whatsapp" TEXT NOT NULL DEFAULT '594694029596',
-    "announcement" TEXT NOT NULL DEFAULT 'Retrait gratuit en boutique à Kourou · Paiement 100 % sécurisé',
+    "announcement" TEXT NOT NULL DEFAULT 'Retrait gratuit en boutique à Kourou, paiement 100 % sécurisé',
     "updatedAt" TIMESTAMP(3) NOT NULL,
     CONSTRAINT "StoreSettings_pkey" PRIMARY KEY ("id")
 );

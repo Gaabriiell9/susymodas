@@ -2,7 +2,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRef, useState } from 'react'
-import { Heart, Minus, Plus, Store, Truck, ShieldCheck, MessageCircle, ChevronDown } from 'lucide-react'
+import { Heart, Minus, Plus, ChevronDown } from 'lucide-react'
 import { useCart } from '@/context/CartContext'
 import { useWishlist } from '@/context/WishlistContext'
 import { categoryLabel, discountPercent, stockForSize } from '@/lib/catalog'
@@ -36,62 +36,53 @@ export default function ProductPageClient({ product, settings }) {
   }
 
   return (
-    <div className="shop-container grid gap-8 pb-16 pt-4 lg:grid-cols-[1.25fr_1fr] lg:gap-14 lg:pt-8">
+    <div className="shop-container grid gap-10 pb-section pt-8 lg:grid-cols-12 lg:gap-8 lg:pt-12">
       {/* Galerie */}
-      <div>
-        {/* Mobile : carrousel */}
-        <div className="relative -mx-4 sm:mx-0 lg:hidden">
-          <div ref={railRef} onScroll={onScroll} className="no-scrollbar flex snap-x snap-mandatory overflow-x-auto">
+      <div className="lg:col-span-7">
+        <div className="relative -mx-gutter lg:hidden">
+          <div ref={railRef} onScroll={onScroll} className="no-scrollbar flex snap-x snap-mandatory overflow-x-auto" aria-label="Photos de l'article">
             {images.map((src, i) => (
-              <div key={i} className="relative aspect-[3/4] w-full shrink-0 snap-center bg-sand">
-                {src ? <Image src={src} alt={`${product.name}, photo ${i + 1}`} fill priority={i === 0} sizes="100vw" className="object-cover" /> : <Placeholder />}
+              <div key={i} className="relative aspect-[3/4] w-full shrink-0 snap-center bg-paper-2">
+                {src ? <Image src={src} alt={`${product.name}, photo ${i + 1}`} fill priority={i === 0} sizes="100vw" className="object-cover" /> : <Placeholder name={product.name} />}
               </div>
             ))}
           </div>
           {images.length > 1 && (
-            <div className="absolute inset-x-0 bottom-4 flex justify-center gap-1.5">
-              {images.map((_, i) => <span key={i} className={cn('h-[3px] w-6 transition', i === active ? 'bg-ink' : 'bg-ink/25')} />)}
-            </div>
+            <p className="absolute bottom-3 right-3 bg-paper px-2 py-1 text-sm tabular-nums" aria-live="polite">{active + 1} sur {images.length}</p>
           )}
         </div>
-        {/* Ordinateur : grille éditoriale */}
         <div className={cn('hidden gap-2 lg:grid', images.length > 1 ? 'grid-cols-2' : 'grid-cols-1')}>
           {images.map((src, i) => (
-            <div key={i} className={cn('relative aspect-[3/4] overflow-hidden bg-sand', images.length > 2 && i === 0 && 'col-span-2 aspect-[4/5]')}>
-              {src ? <Image src={src} alt={`${product.name}, photo ${i + 1}`} fill priority={i === 0} sizes="(max-width: 1024px) 100vw, 35vw" className="object-cover" /> : <Placeholder />}
+            <div key={i} className={cn('photo relative aspect-[3/4] overflow-hidden bg-paper-2', images.length > 2 && i === 0 && 'col-span-2 aspect-[4/5]')}>
+              {src ? <Image src={src} alt={`${product.name}, photo ${i + 1}`} fill priority={i === 0} sizes="(max-width: 1024px) 100vw, 55vw" className="object-cover" /> : <Placeholder name={product.name} />}
             </div>
           ))}
         </div>
       </div>
 
-      {/* Infos */}
-      <div className="lg:sticky lg:top-28 lg:self-start">
-        <nav className="text-[12px] text-ink-muted">
-          <Link href="/collection" className="hover:text-ink">Collection</Link>
-          <span className="mx-2">/</span>
-          <Link href={`/collection?categorie=${product.category}`} className="hover:text-ink">{categoryLabel(product.category)}</Link>
+      {/* Infos et achat */}
+      <div className="lg:sticky lg:top-28 lg:col-span-5 lg:self-start lg:pl-8">
+        <nav aria-label="Fil d'Ariane" className="text-sm text-muted">
+          <Link href="/collection" className="link-underline">Collection</Link>
+          <span className="px-2" aria-hidden="true">/</span>
+          <Link href={`/collection?categorie=${product.category}`} className="link-underline">{categoryLabel(product.category)}</Link>
         </nav>
 
-        <h1 className="display mt-4 text-4xl leading-tight lg:text-[44px]">{product.name}</h1>
-        <div className="mt-3 flex items-baseline gap-3">
-          <span className={cn('text-xl', discount > 0 && 'text-sale')}>{formatPrice(product.price)}</span>
+        <h1 className="mt-6 text-display-s">{product.name}</h1>
+        <p className="mt-4 flex flex-wrap items-baseline gap-x-4 gap-y-1">
+          <span className={cn('display text-[2.5rem] tabular-nums', discount > 0 && 'text-accent')}>{formatPrice(product.price)}</span>
           {discount > 0 && (
             <>
-              <span className="text-ink-muted line-through">{formatPrice(product.originalPrice)}</span>
-              <span className="bg-sale px-2 py-0.5 text-[11px] text-ivory">-{discount}%</span>
+              <s className="text-lg text-muted">{formatPrice(product.originalPrice)}</s>
+              <span className="chip chip-accent">-{discount} %</span>
             </>
           )}
-        </div>
+        </p>
 
-        {product.colors.length > 0 && (
-          <p className="mt-6 text-[13px]"><span className="text-ink-muted">Coloris : </span>{product.colors.join(', ')}</p>
-        )}
-
-        {/* Tailles */}
-        <div className="mt-8">
-          <div className="mb-3 flex items-center justify-between">
-            <p className="label">{single ? 'Taille' : 'Choisir une taille'}</p>
-            {size && left > 0 && left <= 3 && <p className="text-[12px] text-sale">Plus que {left} en stock</p>}
+        <fieldset className="mt-10">
+          <div className="mb-3 flex items-baseline justify-between gap-4">
+            <legend className="font-medium">{single ? 'Taille' : 'Choisir une taille'}</legend>
+            {size && left > 0 && left <= 3 && <p className="text-sm text-accent">Plus que {left} en stock</p>}
           </div>
           <div className="flex flex-wrap gap-2">
             {product.sizes.map((s) => {
@@ -99,12 +90,14 @@ export default function ProductPageClient({ product, settings }) {
               return (
                 <button
                   key={s}
+                  type="button"
                   disabled={n <= 0}
+                  aria-pressed={size === s}
                   onClick={() => { setSize(s); setSizeError(false); setQty(1) }}
                   className={cn(
-                    'h-12 min-w-[56px] border px-4 text-[14px] transition',
-                    size === s ? 'border-ink bg-ink text-ivory' : 'border-line bg-white hover:border-ink',
-                    n <= 0 && 'cursor-not-allowed bg-transparent text-ink-muted/40 line-through hover:border-line'
+                    'h-12 min-w-[56px] border px-4 transition-colors duration-micro',
+                    size === s ? 'border-ink bg-ink text-paper' : 'border-muted hover:bg-paper-2',
+                    'disabled:cursor-not-allowed disabled:border-rule disabled:bg-transparent disabled:text-muted disabled:line-through'
                   )}
                 >
                   {s === 'TU' ? 'Taille unique' : s}
@@ -112,37 +105,37 @@ export default function ProductPageClient({ product, settings }) {
               )
             })}
           </div>
-          {sizeError && <p className="mt-2 text-[13px] text-sale">Merci de choisir une taille.</p>}
-        </div>
+          {sizeError && <p className="mt-3 text-sm text-error" role="alert">Merci de choisir une taille.</p>}
+        </fieldset>
 
-        {/* Ajout */}
-        <div className="mt-8 flex gap-2">
-          <div className="flex h-12 items-center border border-line bg-white">
-            <button onClick={() => setQty((q) => Math.max(1, q - 1))} className="flex h-full w-11 items-center justify-center" aria-label="Moins"><Minus size={14} /></button>
-            <span className="w-8 text-center text-[14px]">{qty}</span>
-            <button onClick={() => setQty((q) => Math.min(left ?? 1, q + 1))} disabled={!size || qty >= (left ?? 1)} className="flex h-full w-11 items-center justify-center disabled:opacity-30" aria-label="Plus"><Plus size={14} /></button>
+        <div className="mt-8 flex flex-wrap gap-2">
+          <div className="flex h-12 items-center border border-muted" role="group" aria-label="Quantité">
+            <button type="button" onClick={() => setQty((q) => Math.max(1, q - 1))} className="flex h-full w-11 items-center justify-center hover:bg-paper-2" aria-label="Moins"><Minus size={14} /></button>
+            <span className="w-8 text-center tabular-nums" aria-live="polite">{qty}</span>
+            <button type="button" onClick={() => setQty((q) => Math.min(left ?? 1, q + 1))} disabled={!size || qty >= (left ?? 1)} className="flex h-full w-11 items-center justify-center hover:bg-paper-2 disabled:cursor-not-allowed disabled:opacity-30" aria-label="Plus"><Plus size={14} /></button>
           </div>
-          <button onClick={add} disabled={soldOut} className="btn-dark flex-1">
+          <button type="button" onClick={add} disabled={soldOut} className="btn-primary min-w-0 flex-1 px-4 max-[400px]:order-last max-[400px]:basis-full">
             {soldOut ? 'Épuisé' : 'Ajouter au panier'}
           </button>
-          <button onClick={() => toggle(product)} className="flex h-12 w-12 shrink-0 items-center justify-center border border-line bg-white hover:border-ink" aria-label="Favoris">
-            <Heart size={19} strokeWidth={1.3} className={cn(wished && 'fill-ink')} />
+          <button type="button" onClick={() => toggle(product)} aria-pressed={wished} className="ml-auto inline-flex h-12 w-12 shrink-0 items-center justify-center border border-muted transition-colors duration-micro hover:bg-paper-2 min-[401px]:ml-0" aria-label={wished ? 'Retirer des favoris' : 'Ajouter aux favoris'}>
+            <Heart size={19} strokeWidth={1.5} className={cn(wished && 'fill-current text-accent')} />
           </button>
         </div>
 
         {soldOut && (
-          <a href={whatsappLink(settings.whatsapp, `Bonjour, la ${product.name} sera-t-elle bientôt de retour ?`)} target="_blank" rel="noopener noreferrer" className="btn-ghost mt-3 w-full">
-            <MessageCircle size={15} /> Être prévenue du retour
+          <a href={whatsappLink(settings.whatsapp, `Bonjour, la ${product.name} sera-t-elle bientôt de retour ?`)} target="_blank" rel="noopener noreferrer" className="btn-outline mt-3 w-full">
+            Être prévenue du retour
           </a>
         )}
 
-        <ul className="mt-8 space-y-3 border-y border-line py-6 text-[13px] text-ink-soft">
-          <li className="flex gap-3"><Store size={17} strokeWidth={1.3} className="shrink-0" /> Retrait gratuit en boutique à Kourou</li>
-          <li className="flex gap-3"><Truck size={17} strokeWidth={1.3} className="shrink-0" /> Livraison à domicile {formatPrice(settings.shippingCost)}{settings.freeShippingThreshold ? `, offerte dès ${formatPrice(settings.freeShippingThreshold)}` : ''}</li>
-          <li className="flex gap-3"><ShieldCheck size={17} strokeWidth={1.3} className="shrink-0" /> Paiement sécurisé par carte bancaire</li>
-        </ul>
+        <dl className="rule-ink mt-10">
+          {product.colors.length > 0 && <Spec term="Coloris" value={product.colors.join(', ')} />}
+          <Spec term="Retrait" value="Gratuit en boutique à Kourou" />
+          <Spec term="Livraison" value={`${formatPrice(settings.shippingCost)}${settings.freeShippingThreshold ? `, offerte dès ${formatPrice(settings.freeShippingThreshold)}` : ''}`} />
+          <Spec term="Paiement" value="Carte bancaire, sécurisé" />
+        </dl>
 
-        <div className="divide-y divide-line border-b border-line">
+        <div className="divide-y divide-rule border-b border-rule">
           {product.description && (
             <Accordion title="Description" defaultOpen>
               <p className="whitespace-pre-line">{product.description}</p>
@@ -150,12 +143,11 @@ export default function ProductPageClient({ product, settings }) {
           )}
           <Accordion title="Livraison et retrait">
             <p>Retrait gratuit en boutique : {settings.storeAddress}. {settings.storeHours}. Nous vous prévenons dès que votre commande est prête.</p>
-            <p className="mt-2">Livraison à domicile en Guyane : {formatPrice(settings.shippingCost)}{settings.freeShippingThreshold ? ` (offerte dès ${formatPrice(settings.freeShippingThreshold)} d'achat)` : ''}.</p>
           </Accordion>
           <Accordion title="Une question ?">
-            <p>Besoin d&apos;un conseil de taille ou d&apos;une photo supplémentaire ? Écrivez-nous, nous répondons rapidement.</p>
-            <a href={whatsappLink(settings.whatsapp, `Bonjour, j'ai une question sur : ${product.name}`)} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-2 underline underline-offset-4">
-              <MessageCircle size={14} /> Discuter sur WhatsApp
+            <p>Un conseil de taille ou une photo de plus ? Écrivez-nous, nous répondons vite.</p>
+            <a href={whatsappLink(settings.whatsapp, `Bonjour, j'ai une question sur : ${product.name}`)} target="_blank" rel="noopener noreferrer" className="link mt-3 inline-block">
+              Discuter sur WhatsApp
             </a>
           </Accordion>
         </div>
@@ -164,22 +156,29 @@ export default function ProductPageClient({ product, settings }) {
   )
 }
 
+function Spec({ term, value }) {
+  return (
+    <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,2fr)] gap-6 border-b border-rule py-3">
+      <dt className="font-medium text-ink-2">{term}</dt>
+      <dd>{value}</dd>
+    </div>
+  )
+}
+
 function Accordion({ title, children, defaultOpen = false }) {
   return (
     <details className="group" open={defaultOpen}>
-      <summary className="flex cursor-pointer list-none items-center justify-between py-4">
-        <span className="label">{title}</span>
-        <ChevronDown size={16} strokeWidth={1.3} className="transition group-open:rotate-180" />
+      <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between py-4 font-medium hover:text-accent">
+        {title}
+        <ChevronDown size={16} strokeWidth={1.5} className="transition-transform duration-short group-open:rotate-180 motion-reduce:transition-none" aria-hidden="true" />
       </summary>
-      <div className="pb-5 text-[14px] leading-relaxed text-ink-soft">{children}</div>
+      <div className="pb-6 text-ink-2">{children}</div>
     </details>
   )
 }
 
-function Placeholder() {
+function Placeholder({ name }) {
   return (
-    <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-sand to-blush-light">
-      <span className="font-serif text-2xl italic text-ink-muted/60">Susy Modas</span>
-    </div>
+    <span className="display absolute inset-0 flex items-center justify-center bg-paper-2 p-8 text-center text-[2.5rem] text-ink-2">{name}</span>
   )
 }

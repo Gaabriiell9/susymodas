@@ -184,6 +184,6 @@ model StoreSettings {
   storeAddress          String   @default("Kourou, Guyane française")
   storeHours            String   @default("Du mardi au samedi, 9h-12h30 et 15h-19h")
   whatsapp              String   @default("594694029596")
-  announcement          String   @default("Retrait gratuit en boutique à Kourou · Paiement 100 % sécurisé")
+  announcement          String   @default("Retrait gratuit en boutique à Kourou, paiement 100 % sécurisé")
   updatedAt             DateTime @updatedAt
 }

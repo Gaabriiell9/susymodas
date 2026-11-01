@@ -121,16 +121,16 @@ export default function ProductForm({ product }) {
 
   return (
     <form onSubmit={save}>
-      <Link href="/gestion/articles" className="inline-flex items-center gap-2 text-[12px] uppercase tracking-label text-ink-muted hover:text-ink"><ArrowLeft size={14} /> Articles</Link>
+      <Link href="/gestion/articles" className="inline-flex items-center gap-2 text-sm text-ink-muted hover:text-ink"><ArrowLeft size={14} /> Articles</Link>
       <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
-        <h1 className="font-serif text-4xl font-light">{isEdit ? 'Modifier l\'article' : 'Nouvel article'}</h1>
+        <h1 className="display text-[2.5rem]">{isEdit ? 'Modifier l\'article' : 'Nouvel article'}</h1>
         <div className="flex gap-2">
-          {isEdit && product.active && <a href={`/produit/${product.slug}`} target="_blank" rel="noreferrer" className="btn-ghost bg-white">Voir sur le site</a>}
-          <button type="submit" disabled={saving || uploading > 0} className="btn-dark">{saving ? 'Enregistrement...' : 'Enregistrer'}</button>
+          {isEdit && product.active && <a href={`/produit/${product.slug}`} target="_blank" rel="noreferrer" className="btn-ghost bg-paper">Voir sur le site</a>}
+          <button type="submit" disabled={saving || uploading > 0} className="btn-dark">{saving ? 'Enregistrement…' : 'Enregistrer'}</button>
         </div>
       </div>
 
-      {error && <p className="mt-6 border border-red-200 bg-red-50 px-4 py-3 text-[14px] text-sale">{error}</p>}
+      {error && <p className="mt-6 border border-error bg-accent-soft px-4 py-3 text-[14px] text-accent">{error}</p>}
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[1.4fr_1fr]">
         <div className="space-y-6">
@@ -140,11 +140,11 @@ export default function ProductForm({ product }) {
                 <div key={src} className="group relative aspect-[3/4] overflow-hidden bg-sand">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={src} alt="" className="h-full w-full object-cover" />
-                  {i === 0 && <span className="absolute left-1.5 top-1.5 bg-ink px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-ivory">Principale</span>}
-                  <button type="button" onClick={() => setImages((l) => l.filter((x) => x !== src))} className="absolute right-1.5 top-1.5 bg-white/90 p-1" aria-label="Retirer la photo"><X size={14} /></button>
+                  {i === 0 && <span className="absolute left-1.5 top-1.5 bg-ink px-1.5 py-0.5 text-sm text-ivory">Principale</span>}
+                  <button type="button" onClick={() => setImages((l) => l.filter((x) => x !== src))} className="absolute right-1.5 top-1.5 bg-paper/90 p-1" aria-label="Retirer la photo"><X size={14} /></button>
                   <div className="absolute inset-x-1.5 bottom-1.5 flex justify-between">
-                    <button type="button" onClick={() => move(i, -1)} disabled={i === 0} className="bg-white/90 p-1 disabled:opacity-0" aria-label="Avancer"><ChevronLeft size={14} /></button>
-                    <button type="button" onClick={() => move(i, 1)} disabled={i === images.length - 1} className="bg-white/90 p-1 disabled:opacity-0" aria-label="Reculer"><ChevronRight size={14} /></button>
+                    <button type="button" onClick={() => move(i, -1)} disabled={i === 0} className="bg-paper/90 p-1 disabled:opacity-0" aria-label="Avancer"><ChevronLeft size={14} /></button>
+                    <button type="button" onClick={() => move(i, 1)} disabled={i === images.length - 1} className="bg-paper/90 p-1 disabled:opacity-0" aria-label="Reculer"><ChevronRight size={14} /></button>
                   </div>
                 </div>
               ))}
@@ -154,7 +154,7 @@ export default function ProductForm({ product }) {
               {images.length + uploading < 10 && (
                 <button type="button" onClick={() => fileRef.current?.click()} className="flex aspect-[3/4] flex-col items-center justify-center gap-2 border border-dashed border-ink-muted/50 text-ink-muted transition hover:border-ink hover:text-ink">
                   <ImagePlus size={22} strokeWidth={1.3} />
-                  <span className="text-[11px] uppercase tracking-wider">Ajouter</span>
+                  <span className="text-sm">Ajouter</span>
                 </button>
               )}
             </div>
@@ -190,14 +190,14 @@ export default function ProductForm({ product }) {
                 <Label text="Prix de vente (€)"><input type="number" step="0.01" min="0" className="field" value={form.price} onChange={set('price')} required /></Label>
                 <Label text="Prix barré (€)"><input type="number" step="0.01" min="0" className="field" value={form.originalPrice} onChange={set('originalPrice')} placeholder="Promo" /></Label>
               </div>
-              {discount > 0 && <p className="text-[13px] text-sale">Promotion de -{discount}% : affiché {formatPrice(form.price)} au lieu de {formatPrice(form.originalPrice)}</p>}
+              {discount > 0 && <p className="text-sm text-accent">Promotion de -{discount}% : affiché {formatPrice(form.price)} au lieu de {formatPrice(form.originalPrice)}</p>}
             </div>
           </Card>
 
           <Card title="Tailles et stock" hint={`${total} pièce(s) au total`}>
             <div className="mb-4 flex flex-wrap gap-2">
               {PRESETS.map((p) => (
-                <button key={p.label} type="button" onClick={() => applyPreset(p.sizes)} className="border border-line px-3 py-1.5 text-[12px] hover:border-ink">{p.label}</button>
+                <button key={p.label} type="button" onClick={() => applyPreset(p.sizes)} className="border border-line px-3 py-1.5 text-sm hover:border-ink">{p.label}</button>
               ))}
             </div>
             <div className="space-y-2">
@@ -215,7 +215,7 @@ export default function ProductForm({ product }) {
             </div>
             <div className="mt-3 flex gap-2">
               <input value={newSize} onChange={(e) => setNewSize(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addSize() } }} placeholder="Autre taille (ex : 38)" className="field h-10 flex-1" />
-              <button type="button" onClick={addSize} className="btn-ghost h-10 bg-white px-4">Ajouter</button>
+              <button type="button" onClick={addSize} className="btn-ghost h-10 bg-paper px-4">Ajouter</button>
             </div>
           </Card>
         </div>
@@ -226,10 +226,10 @@ export default function ProductForm({ product }) {
 
 function Card({ title, hint, children }) {
   return (
-    <section className="border border-line bg-white p-5 sm:p-6">
+    <section className="border border-line bg-paper p-5 sm:p-6">
       <div className="mb-4 flex items-baseline justify-between gap-3">
-        <h2 className="text-[12px] uppercase tracking-label">{title}</h2>
-        {hint && <p className="text-right text-[12px] text-ink-muted">{hint}</p>}
+        <h2 className="font-body text-sm font-medium tracking-normal">{title}</h2>
+        {hint && <p className="text-right text-sm text-ink-muted">{hint}</p>}
       </div>
       {children}
     </section>
@@ -244,8 +244,8 @@ function Toggle({ checked, onChange, label, hint }) {
   return (
     <label className="flex cursor-pointer items-start gap-3 py-2">
       <input type="checkbox" checked={checked} onChange={onChange} className="peer sr-only" />
-      <span className="relative mt-0.5 h-5 w-9 shrink-0 rounded-full bg-line transition peer-checked:bg-ink after:absolute after:left-0.5 after:top-0.5 after:h-4 after:w-4 after:rounded-full after:bg-white after:transition peer-checked:after:translate-x-4" />
-      <span><span className="block text-[14px]">{label}</span>{hint && <span className="block text-[12px] text-ink-muted">{hint}</span>}</span>
+      <span className="relative mt-0.5 h-5 w-9 shrink-0 rounded-full bg-line transition-colors peer-checked:bg-ink after:absolute after:left-0.5 after:top-0.5 after:h-4 after:w-4 after:rounded-full after:bg-paper after:transition-transform after:duration-short motion-reduce:after:transition-none peer-checked:after:translate-x-4" />
+      <span><span className="block text-[14px]">{label}</span>{hint && <span className="block text-sm text-ink-muted">{hint}</span>}</span>
     </label>
   )
 }

@@ -29,8 +29,8 @@ export default async function Dashboard() {
     <>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-[12px] uppercase tracking-label text-ink-muted">{formatDate(now)}</p>
-          <h1 className="mt-1 font-serif text-4xl font-light">Tableau de bord</h1>
+          <h1 className="text-3xl">Tableau de bord</h1>
+          <p className="mt-1 text-sm text-ink-muted">{formatDate(now)}</p>
         </div>
         <Link href="/gestion/articles/nouveau" className="btn-dark"><Plus size={15} /> Nouvel article</Link>
       </div>
@@ -39,22 +39,22 @@ export default async function Dashboard() {
         {stats.map((s) => {
           const inner = (
             <>
-              <p className="text-[11px] uppercase tracking-label text-ink-muted">{s.label}</p>
-              <p className={cn('mt-3 font-serif text-3xl', s.alert && 'text-sale')}>{s.value}</p>
-              <p className="mt-1 text-[12px] text-ink-muted">{s.sub}</p>
+              <p className="text-sm text-ink-muted">{s.label}</p>
+              <p className={cn('mt-3 display text-[2.25rem]', s.alert && 'text-sale')}>{s.value}</p>
+              <p className="mt-1 text-sm text-ink-muted">{s.sub}</p>
             </>
           )
           return s.href
-            ? <Link key={s.label} href={s.href} className="border border-line bg-white p-5 transition hover:border-ink">{inner}</Link>
-            : <div key={s.label} className="border border-line bg-white p-5">{inner}</div>
+            ? <Link key={s.label} href={s.href} className="border border-line bg-paper p-5 transition hover:border-ink">{inner}</Link>
+            : <div key={s.label} className="border border-line bg-paper p-5">{inner}</div>
         })}
       </div>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[1.5fr_1fr]">
-        <section className="border border-line bg-white">
+        <section className="border border-line bg-paper">
           <div className="flex items-center justify-between border-b border-line px-5 py-4">
-            <h2 className="text-[12px] uppercase tracking-label">Dernières ventes</h2>
-            <Link href="/gestion/ventes" className="flex items-center gap-1 text-[12px] text-ink-soft hover:text-ink">Tout voir <ArrowRight size={13} /></Link>
+            <h2 className="font-body text-sm font-medium tracking-normal">Dernières ventes</h2>
+            <Link href="/gestion/ventes" className="flex items-center gap-1 text-sm text-ink-soft hover:text-ink">Tout voir <ArrowRight size={13} /></Link>
           </div>
           {latest.length === 0 ? (
             <p className="px-5 py-12 text-center text-[14px] text-ink-muted">Aucune vente pour le moment.</p>
@@ -65,10 +65,10 @@ export default async function Dashboard() {
                   <Link href={`/gestion/ventes?ref=${o.reference}`} className="flex items-center justify-between gap-3 px-5 py-3.5 hover:bg-sand/40">
                     <div className="min-w-0">
                       <p className="truncate text-[14px]">{o.firstName} {o.lastName}</p>
-                      <p className="text-[12px] text-ink-muted">{formatDate(o.createdAt, true)} · {DELIVERY_LABEL[o.deliveryMethod]} · {o.items.reduce((s, i) => s + i.quantity, 0)} art.</p>
+                      <p className="text-sm text-ink-muted">{formatDate(o.createdAt, true)} · {DELIVERY_LABEL[o.deliveryMethod]} · {o.items.reduce((s, i) => s + i.quantity, 0)} art.</p>
                     </div>
                     <div className="flex shrink-0 items-center gap-3">
-                      <span className={cn('hidden px-2 py-0.5 text-[11px] sm:inline', ORDER_STATUS[o.status].tone)}>{ORDER_STATUS[o.status].label}</span>
+                      <span className={cn('hidden px-2 py-0.5 text-sm sm:inline', ORDER_STATUS[o.status].tone)}>{ORDER_STATUS[o.status].label}</span>
                       <span className="text-[14px]">{formatPrice(o.totalAmount)}</span>
                     </div>
                   </Link>
@@ -78,8 +78,8 @@ export default async function Dashboard() {
           )}
         </section>
 
-        <section className="border border-line bg-white">
-          <div className="border-b border-line px-5 py-4"><h2 className="text-[12px] uppercase tracking-label">Stock faible</h2></div>
+        <section className="border border-line bg-paper">
+          <div className="border-b border-line px-5 py-4"><h2 className="font-body text-sm font-medium tracking-normal">Stock faible</h2></div>
           {lowStock.length === 0 ? (
             <p className="px-5 py-12 text-center text-[14px] text-ink-muted">Tout est bien approvisionné.</p>
           ) : (
@@ -89,7 +89,7 @@ export default async function Dashboard() {
                   <Link href={`/gestion/articles/${p.id}`} className="flex items-center gap-3 px-5 py-3 hover:bg-sand/40">
                     <div className="relative aspect-[3/4] w-10 shrink-0 overflow-hidden bg-sand"><ProductImage src={p.images[0]} alt={p.name} sizes="40px" /></div>
                     <p className="min-w-0 flex-1 truncate text-[14px]">{p.name}</p>
-                    <span className={cn('text-[12px]', p.stock === 0 ? 'text-sale' : 'text-amber-700')}>{p.stock === 0 ? 'Épuisé' : `${p.stock} restant(s)`}</span>
+                    <span className={cn('text-sm', p.stock === 0 ? 'text-sale' : 'text-accent')}>{p.stock === 0 ? 'Épuisé' : `${p.stock} restant(s)`}</span>
                   </Link>
                 </li>
               ))}

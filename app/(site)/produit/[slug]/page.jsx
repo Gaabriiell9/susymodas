@@ -40,9 +40,9 @@ export default async function ProductPage({ params }) {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }} />
       <ProductPageClient product={product} settings={settings} />
       {related.length > 0 && (
-        <section className="shop-container border-t border-line pb-20 pt-14">
-          <h2 className="display mb-8 text-3xl lg:text-4xl">Vous aimerez aussi</h2>
-          <div className="grid grid-cols-2 gap-x-3 gap-y-10 sm:gap-x-5 lg:grid-cols-4">
+        <section className="shop-container border-t border-rule pb-section pt-section-s">
+          <h2>Vous aimerez aussi</h2>
+          <div className="mt-16 grid grid-cols-2 gap-x-8 gap-y-16 max-sm:gap-x-4 lg:grid-cols-4">
             {related.map((p) => <ProductCard key={p.id} product={p} />)}
           </div>
         </section>

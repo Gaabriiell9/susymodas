@@ -11,8 +11,8 @@ export default async function VentesPage({ searchParams }) {
   const plain = JSON.parse(JSON.stringify(orders))
   return (
     <>
-      <h1 className="font-serif text-4xl font-light">Ventes</h1>
-      <p className="mt-1 text-[13px] text-ink-muted">Commandes payées en ligne. Mettez à jour le statut pour suivre la préparation.</p>
+      <h1 className="display text-[2.5rem]">Ventes</h1>
+      <p className="mt-1 text-sm text-ink-muted">Commandes payées en ligne. Mettez à jour le statut pour suivre la préparation.</p>
       <OrdersBoard initial={plain} initialStatus={searchParams.statut ?? ''} initialRef={searchParams.ref ?? ''} />
     </>
   )

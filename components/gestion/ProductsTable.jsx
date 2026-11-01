@@ -37,7 +37,7 @@ export default function ProductsTable({ initial }) {
   }
 
   return (
-    <div className="mt-8 border border-line bg-white">
+    <div className="mt-8 border border-line bg-paper">
       <div className="flex flex-wrap gap-3 border-b border-line p-4">
         <label className="relative min-w-[200px] flex-1">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted" />
@@ -69,14 +69,14 @@ export default function ProductsTable({ initial }) {
               </Link>
               <div className="min-w-0 flex-1">
                 <Link href={`/gestion/articles/${p.id}`} className="block truncate text-[14px] hover:underline">{p.name}</Link>
-                <p className="mt-0.5 text-[12px] text-ink-muted">
+                <p className="mt-0.5 text-sm text-ink-muted">
                   {categoryLabel(p.category)} · {formatPrice(p.price)}{p.originalPrice ? <span className="ml-1 line-through">{formatPrice(p.originalPrice)}</span> : null}
                 </p>
-                <p className="mt-0.5 truncate text-[12px] text-ink-muted">
+                <p className="mt-0.5 truncate text-sm text-ink-muted">
                   {p.sizes.map((s) => `${s}: ${p.sizeStock[s] ?? 0}`).join(' · ')}
                 </p>
               </div>
-              <span className={cn('hidden w-24 text-right text-[12px] sm:block', p.stock === 0 ? 'text-sale' : p.stock <= 2 ? 'text-amber-700' : 'text-ink-soft')}>
+              <span className={cn('hidden w-24 text-right text-sm sm:block', p.stock === 0 ? 'text-sale' : p.stock <= 2 ? 'text-accent' : 'text-ink-soft')}>
                 {p.stock === 0 ? 'Épuisé' : `${p.stock} en stock`}
               </span>
               <div className="flex shrink-0 items-center">

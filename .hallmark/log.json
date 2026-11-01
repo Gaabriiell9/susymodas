@@ -1,0 +1,38 @@
+[
+ {
+  "mode": "redesign",
+  "depth": "full",
+  "scope": "site",
+  "shape": "Catalogue",
+  "theme": "loom",
+  "axes": "light/roman-serif/warm",
+  "hero": "Stage",
+  "nav": "edge-aligned",
+  "footer": "mast",
+  "imagery": "photographs",
+  "photos": [
+   "hero-robe.jpg (user)"
+  ],
+  "entry": "none",
+  "fingerprint": "catalogue-stage-edge-mast-index-band",
+  "sections": [
+   "Hero",
+   "Grid",
+   "Index",
+   "Band",
+   "Grid",
+   "Statement",
+   "Footer"
+  ],
+  "signature": "the yellow dress full length beside the head, and the click and collect sheet as ruled rows",
+  "waived": [
+   "59",
+   "44c",
+   "3",
+   "85",
+   "77"
+  ],
+  "prompt": "online clothing boutique for modest christian women, Kourou, buy online or collect in store",
+  "date": "2026-11-01"
+ }
+]

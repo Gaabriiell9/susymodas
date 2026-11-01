@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { useEffect } from 'react'
-import { Minus, Plus, X, Truck, Store } from 'lucide-react'
+import { Minus, Plus, X } from 'lucide-react'
 import { useCart } from '@/context/CartContext'
 import ProductImage from '@/components/ui/ProductImage'
 import { formatPrice } from '@/lib/utils'
@@ -20,72 +20,71 @@ export default function CartDrawer() {
   if (!isOpen) return null
   const threshold = settings?.freeShippingThreshold
   const remaining = threshold ? Math.max(0, threshold - subtotal) : null
-  const progress = threshold ? Math.min(100, (subtotal / threshold) * 100) : 0
+  const progress = threshold ? Math.min(1, subtotal / threshold) : 0
 
   return (
-    <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label="Panier">
-      <div className="absolute inset-0 animate-fade bg-ink/40" onClick={closeCart} />
-      <aside className="absolute inset-y-0 right-0 flex w-full max-w-[440px] animate-slide-in flex-col bg-ivory">
-        <div className="flex h-16 items-center justify-between border-b border-line px-6">
-          <p className="label">Panier ({itemCount})</p>
-          <button onClick={closeCart} className="-mr-2 p-2" aria-label="Fermer le panier"><X size={22} strokeWidth={1.3} /></button>
+    <div className="fixed inset-0 z-modal" role="dialog" aria-modal="true" aria-label="Panier">
+      <div className="absolute inset-0 animate-fade bg-ink/40 motion-reduce:animate-none" onClick={closeCart} />
+      <aside className="absolute inset-y-0 right-0 flex w-full max-w-[440px] animate-slide-in flex-col bg-paper motion-reduce:animate-none">
+        <div className="flex h-[72px] items-center justify-between border-b-2 border-rule-ink px-6">
+          <p className="font-medium">Panier, {itemCount} article{itemCount > 1 ? 's' : ''}</p>
+          <button type="button" onClick={closeCart} className="-mr-3 inline-flex h-11 w-11 items-center justify-center hover:text-accent" aria-label="Fermer le panier"><X size={22} strokeWidth={1.5} /></button>
         </div>
 
         {items.length === 0 ? (
-          <div className="flex flex-1 flex-col items-center justify-center px-8 text-center">
-            <p className="display text-3xl">Votre panier est vide</p>
-            <p className="mt-3 text-sm text-ink-muted">Laissez-vous inspirer par nos dernières pièces.</p>
-            <Link href="/collection?tri=nouveautes" onClick={closeCart} className="btn-dark mt-8">Voir les nouveautés</Link>
+          <div className="flex flex-1 flex-col items-start justify-center px-6">
+            <p className="display text-[2.25rem]">Votre panier est vide</p>
+            <p className="mt-3 text-muted">Laissez-vous inspirer par nos dernières pièces.</p>
+            <Link href="/collection?tri=nouveautes" onClick={closeCart} className="btn-primary mt-8">Voir les nouveautés</Link>
           </div>
         ) : (
           <>
             {threshold ? (
-              <div className="border-b border-line px-6 py-4">
-                <p className="text-[13px] text-ink-soft">
+              <div className="border-b border-rule px-6 py-4">
+                <p className="text-sm text-ink-2">
                   {remaining > 0
                     ? <>Plus que <strong className="font-medium text-ink">{formatPrice(remaining)}</strong> pour la livraison offerte</>
                     : <>Livraison à domicile <strong className="font-medium text-ink">offerte</strong></>}
                 </p>
-                <div className="mt-2.5 h-[3px] bg-line"><div className="h-full bg-ink transition-all duration-500" style={{ width: `${progress}%` }} /></div>
+                <div className="mt-3 h-[3px] overflow-hidden bg-paper-3">
+                  <div className="h-full origin-left bg-accent transition-transform duration-long ease-out" style={{ transform: `scaleX(${progress})` }} />
+                </div>
               </div>
             ) : null}
 
-            <ul className="flex-1 divide-y divide-line overflow-y-auto px-6">
+            <ul className="flex-1 divide-y divide-rule overflow-y-auto px-6">
               {items.map((item) => (
                 <li key={`${item.id}-${item.size}`} className="flex gap-4 py-5">
-                  <Link href={`/produit/${item.slug}`} onClick={closeCart} className="relative aspect-[3/4] w-24 shrink-0 overflow-hidden bg-sand">
+                  <Link href={`/produit/${item.slug}`} onClick={closeCart} className="photo relative aspect-[3/4] w-24 shrink-0 overflow-hidden bg-paper-2">
                     <ProductImage src={item.image} alt={item.name} sizes="96px" />
                   </Link>
                   <div className="flex min-w-0 flex-1 flex-col">
                     <div className="flex justify-between gap-3">
-                      <Link href={`/produit/${item.slug}`} onClick={closeCart} className="text-[14px] leading-snug">{item.name}</Link>
-                      <p className="shrink-0 text-[14px]">{formatPrice(item.price * item.qty)}</p>
+                      <Link href={`/produit/${item.slug}`} onClick={closeCart} className="font-medium leading-snug hover:text-accent">{item.name}</Link>
+                      <p className="shrink-0 tabular-nums">{formatPrice(item.price * item.qty)}</p>
                     </div>
-                    {item.size && <p className="mt-1 text-[12px] text-ink-muted">Taille : {item.size === 'TU' ? 'Unique' : item.size}</p>}
+                    {item.size && <p className="mt-1 text-sm text-muted">Taille {item.size === 'TU' ? 'unique' : item.size}</p>}
                     <div className="mt-auto flex items-center justify-between pt-3">
-                      <div className="flex h-9 items-center border border-line">
-                        <button onClick={() => updateQty(item.id, item.size, item.qty - 1)} className="flex h-full w-9 items-center justify-center" aria-label="Retirer un"><Minus size={13} /></button>
-                        <span className="w-7 text-center text-[13px]">{item.qty}</span>
-                        <button onClick={() => updateQty(item.id, item.size, item.qty + 1)} disabled={item.qty >= (item.maxStock ?? 99)} className="flex h-full w-9 items-center justify-center disabled:opacity-30" aria-label="Ajouter un"><Plus size={13} /></button>
+                      <div className="flex h-11 items-center border border-muted">
+                        <button type="button" onClick={() => updateQty(item.id, item.size, item.qty - 1)} className="flex h-full w-11 items-center justify-center hover:bg-paper-2" aria-label="Retirer un exemplaire"><Minus size={14} /></button>
+                        <span className="w-8 text-center tabular-nums" aria-live="polite">{item.qty}</span>
+                        <button type="button" onClick={() => updateQty(item.id, item.size, item.qty + 1)} disabled={item.qty >= (item.maxStock ?? 99)} className="flex h-full w-11 items-center justify-center hover:bg-paper-2 disabled:cursor-not-allowed disabled:opacity-30" aria-label="Ajouter un exemplaire"><Plus size={14} /></button>
                       </div>
-                      <button onClick={() => removeItem(item.id, item.size)} className="text-[12px] text-ink-muted underline underline-offset-4 hover:text-ink">Retirer</button>
+                      <button type="button" onClick={() => removeItem(item.id, item.size)} className="link text-sm text-muted">Retirer</button>
                     </div>
                   </div>
                 </li>
               ))}
             </ul>
 
-            <div className="border-t border-line bg-white px-6 py-5">
-              <div className="flex items-baseline justify-between">
-                <span className="label">Sous-total</span>
-                <span className="text-lg">{formatPrice(subtotal)}</span>
-              </div>
-              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[12px] text-ink-muted">
-                <span className="flex items-center gap-1.5"><Store size={13} /> Retrait gratuit à Kourou</span>
-                <span className="flex items-center gap-1.5"><Truck size={13} /> Livraison {formatPrice(settings?.shippingCost ?? 0)}</span>
-              </div>
-              <Link href="/commande" onClick={closeCart} className="btn-dark mt-5 w-full">Commander</Link>
-              <button onClick={closeCart} className="mt-3 w-full text-center text-[12px] uppercase tracking-label text-ink-soft underline underline-offset-4">Continuer mes achats</button>
+            <div className="border-t-2 border-rule-ink bg-paper-2 px-6 py-6">
+              <dl className="flex items-baseline justify-between">
+                <dt className="font-medium">Sous-total</dt>
+                <dd className="display text-[2rem] tabular-nums">{formatPrice(subtotal)}</dd>
+              </dl>
+              <p className="mt-1 text-sm text-muted">Retrait gratuit à Kourou, ou livraison {formatPrice(settings?.shippingCost ?? 0)}.</p>
+              <Link href="/commande" onClick={closeCart} className="btn-primary mt-5 w-full">Commander</Link>
+              <button type="button" onClick={closeCart} className="link mx-auto mt-4 block text-sm">Continuer mes achats</button>
             </div>
           </>
         )}

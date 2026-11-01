@@ -56,14 +56,14 @@ export default function OrdersBoard({ initial, initialStatus, initialRef }) {
     <div className="mt-8">
       <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:px-0">
         {FILTERS.map((f) => (
-          <button key={f.id} onClick={() => setStatus(f.id)} className={cn('shrink-0 border px-3.5 py-2 text-[12px] transition', status === f.id ? 'border-ink bg-ink text-ivory' : 'border-line bg-white hover:border-ink')}>
+          <button key={f.id} onClick={() => setStatus(f.id)} className={cn('shrink-0 border px-3.5 py-2 text-sm transition', status === f.id ? 'border-ink bg-ink text-ivory' : 'border-line bg-paper hover:border-ink')}>
             {f.label} <span className="ml-1 opacity-60">{counts[f.id]}</span>
           </button>
         ))}
       </div>
-      <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Rechercher (nom, référence, téléphone...)" className="field mt-4 h-10 bg-white" />
+      <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Rechercher (nom, référence, téléphone...)" className="field mt-4 h-10 bg-paper" />
 
-      <div className="mt-4 border border-line bg-white">
+      <div className="mt-4 border border-line bg-paper">
         {shown.length === 0 ? (
           <p className="px-5 py-16 text-center text-[14px] text-ink-muted">Aucune commande ici.</p>
         ) : (
@@ -77,30 +77,30 @@ export default function OrdersBoard({ initial, initialStatus, initialRef }) {
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center bg-sand">{o.deliveryMethod === 'PICKUP' ? <Store size={16} strokeWidth={1.4} /> : <Truck size={16} strokeWidth={1.4} />}</span>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-[14px]">{o.firstName} {o.lastName}</p>
-                      <p className="truncate text-[12px] text-ink-muted">{o.reference} · {formatDate(o.createdAt, true)} · {units} art.</p>
+                      <p className="truncate text-sm text-ink-muted">{o.reference} · {formatDate(o.createdAt, true)} · {units} art.</p>
                     </div>
-                    <span className={cn('hidden shrink-0 px-2 py-0.5 text-[11px] sm:inline', ORDER_STATUS[o.status].tone)}>{ORDER_STATUS[o.status].label}</span>
+                    <span className={cn('hidden shrink-0 px-2 py-0.5 text-sm sm:inline', ORDER_STATUS[o.status].tone)}>{ORDER_STATUS[o.status].label}</span>
                     <span className="w-20 shrink-0 text-right text-[14px]">{formatPrice(o.totalAmount)}</span>
                     <ChevronDown size={16} className={cn('shrink-0 text-ink-muted transition', isOpen && 'rotate-180')} />
                   </button>
 
                   {isOpen && (
-                    <div className="grid gap-6 border-t border-line bg-[#FCFBF9] px-4 py-5 sm:px-5 lg:grid-cols-[1.3fr_1fr]">
+                    <div className="grid gap-6 border-t border-line bg-paper px-4 py-5 sm:px-5 lg:grid-cols-[1.3fr_1fr]">
                       <div>
-                        <p className="text-[11px] uppercase tracking-label text-ink-muted">Articles</p>
+                        <p className="text-sm text-ink-muted">Articles</p>
                         <ul className="mt-3 space-y-3">
                           {o.items.map((i) => (
                             <li key={i.id} className="flex items-center gap-3 text-[14px]">
                               <div className="relative aspect-[3/4] w-12 shrink-0 overflow-hidden bg-sand"><ProductImage src={i.productImage} alt={i.productName} sizes="48px" /></div>
                               <div className="flex-1">
                                 <p>{i.productName}</p>
-                                <p className="text-[12px] text-ink-muted">{i.size ? `Taille ${i.size === 'TU' ? 'unique' : i.size} · ` : ''}Qté {i.quantity}</p>
+                                <p className="text-sm text-ink-muted">{i.size ? `Taille ${i.size === 'TU' ? 'unique' : i.size} · ` : ''}Qté {i.quantity}</p>
                               </div>
                               <p>{formatPrice(i.price * i.quantity)}</p>
                             </li>
                           ))}
                         </ul>
-                        <dl className="mt-4 space-y-1 border-t border-line pt-3 text-[13px]">
+                        <dl className="mt-4 space-y-1 border-t border-line pt-3 text-sm">
                           <div className="flex justify-between"><dt className="text-ink-muted">Sous-total</dt><dd>{formatPrice(o.subtotal)}</dd></div>
                           <div className="flex justify-between"><dt className="text-ink-muted">{DELIVERY_LABEL[o.deliveryMethod]}</dt><dd>{o.shippingCost ? formatPrice(o.shippingCost) : 'Gratuit'}</dd></div>
                           <div className="flex justify-between font-medium"><dt>Total payé</dt><dd>{formatPrice(o.totalAmount)}</dd></div>
@@ -108,14 +108,14 @@ export default function OrdersBoard({ initial, initialStatus, initialRef }) {
                       </div>
                       <div className="space-y-4">
                         <div>
-                          <p className="text-[11px] uppercase tracking-label text-ink-muted">Client</p>
+                          <p className="text-sm text-ink-muted">Client</p>
                           <ul className="mt-3 space-y-2 text-[14px]">
                             <li className="flex gap-2"><Phone size={15} className="mt-0.5 shrink-0 text-ink-muted" /><a href={`tel:${o.phone}`} className="underline-offset-2 hover:underline">{o.phone}</a></li>
                             <li className="flex gap-2"><Mail size={15} className="mt-0.5 shrink-0 text-ink-muted" /><a href={`mailto:${o.email}`} className="break-all underline-offset-2 hover:underline">{o.email}</a></li>
                             {o.deliveryMethod === 'DELIVERY' && <li className="flex gap-2"><MapPin size={15} className="mt-0.5 shrink-0 text-ink-muted" />{o.address}, {o.postalCode} {o.city}</li>}
                           </ul>
-                          {o.notes && <p className="mt-3 bg-sand px-3 py-2 text-[13px]">« {o.notes} »</p>}
-                          <a href={whatsappLink(phoneForWa(o.phone), `Bonjour ${o.firstName}, c'est Susy Modas au sujet de votre commande ${o.reference}.`)} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-2 text-[13px] underline underline-offset-4">
+                          {o.notes && <p className="mt-3 bg-sand px-3 py-2 text-sm">« {o.notes} »</p>}
+                          <a href={whatsappLink(phoneForWa(o.phone), `Bonjour ${o.firstName}, c'est Susy Modas au sujet de votre commande ${o.reference}.`)} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-2 text-sm underline underline-offset-4">
                             <MessageCircle size={14} /> Contacter sur WhatsApp
                           </a>
                         </div>
@@ -124,9 +124,9 @@ export default function OrdersBoard({ initial, initialStatus, initialRef }) {
                             <button key={s} disabled={busy === o.id} onClick={() => update(o, s)} className="btn-dark h-10 px-4">{STEP_LABEL[s]}</button>
                           ))}
                           {!['DELIVERED', 'CANCELLED'].includes(o.status) && (
-                            <button disabled={busy === o.id} onClick={() => update(o, 'CANCELLED')} className="btn-ghost h-10 bg-white px-4 text-sale">Annuler</button>
+                            <button disabled={busy === o.id} onClick={() => update(o, 'CANCELLED')} className="btn-ghost h-10 bg-paper px-4 text-accent">Annuler</button>
                           )}
-                          {o.status === 'DELIVERED' && <p className="text-[13px] text-emerald-700">Commande terminée.</p>}
+                          {o.status === 'DELIVERED' && <p className="text-sm text-success">Commande terminée.</p>}
                         </div>
                       </div>
                     </div>

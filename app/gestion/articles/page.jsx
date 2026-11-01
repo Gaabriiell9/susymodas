@@ -10,8 +10,8 @@ export default async function ArticlesPage() {
     <>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-serif text-4xl font-light">Articles</h1>
-          <p className="mt-1 text-[13px] text-ink-muted">{products.length} article(s) au catalogue</p>
+          <h1 className="display text-[2.5rem]">Articles</h1>
+          <p className="mt-1 text-sm text-ink-muted">{products.length} article(s) au catalogue</p>
         </div>
         <Link href="/gestion/articles/nouveau" className="btn-dark"><Plus size={15} /> Nouvel article</Link>
       </div>

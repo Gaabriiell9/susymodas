@@ -30,25 +30,24 @@ function Success() {
   if (error) {
     return (
       <div className="shop-container py-28 text-center">
-        <h1 className="display text-4xl">Oups</h1>
+        <h1 className="text-display-s">Impossible d&apos;afficher la commande</h1>
         <p className="mt-3 text-ink-muted">{error}</p>
         <Link href="/" className="btn-dark mt-8">Retour à l&apos;accueil</Link>
       </div>
     )
   }
-  if (!order) return <div className="shop-container py-32 text-center text-ink-muted">Confirmation du paiement...</div>
+  if (!order) return <div className="shop-container py-32 text-center text-ink-muted">Confirmation du paiement…</div>
 
   const pickup = order.deliveryMethod === 'PICKUP'
   return (
     <div className="shop-container max-w-2xl py-16 lg:py-24">
       <div className="text-center">
         <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-ink text-ivory"><Check size={24} /></span>
-        <p className="label mt-6 text-ink-muted">Commande {order.reference}</p>
-        <h1 className="display mt-3 text-4xl lg:text-5xl">Merci {order.firstName} !</h1>
-        <p className="mt-4 text-ink-soft">Votre paiement est confirmé. Un récapitulatif a été envoyé à {order.email}.</p>
+        <h1 className="mt-6 text-display-s">Merci {order.firstName} !</h1>
+        <p className="mt-4 text-ink-soft">Votre paiement est confirmé pour la commande {order.reference}. Un récapitulatif a été envoyé à {order.email}.</p>
       </div>
 
-      <div className="mt-12 border border-line bg-white p-6">
+      <div className="mt-12 border border-line bg-paper p-6">
         <p className="flex items-start gap-3 text-[14px]">
           {pickup ? <Store size={18} strokeWidth={1.3} className="mt-0.5 shrink-0" /> : <Truck size={18} strokeWidth={1.3} className="mt-0.5 shrink-0" />}
           <span>
@@ -61,7 +60,7 @@ function Success() {
           {order.items.map((i, n) => (
             <li key={n} className="flex items-center gap-4 text-[14px]">
               <div className="relative aspect-[3/4] w-14 shrink-0 overflow-hidden bg-sand"><ProductImage src={i.image} alt={i.name} sizes="56px" /></div>
-              <div className="flex-1"><p>{i.name}</p><p className="text-[12px] text-ink-muted">{i.size && i.size !== 'TU' ? `Taille ${i.size} · ` : ''}Qté {i.quantity}</p></div>
+              <div className="flex-1"><p>{i.name}</p><p className="text-sm text-ink-muted">{i.size && i.size !== 'TU' ? `Taille ${i.size} · ` : ''}Qté {i.quantity}</p></div>
               <p>{formatPrice(i.price * i.quantity)}</p>
             </li>
           ))}
