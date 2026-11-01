@@ -1,54 +1,36 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: [
-    './pages/**/*.{js,jsx}',
-    './components/**/*.{js,jsx}',
-    './app/**/*.{js,jsx}',
-  ],
+  content: ['./components/**/*.{js,jsx}', './app/**/*.{js,jsx}'],
   theme: {
     extend: {
       colors: {
-        cream:    '#FAF7F2',
-        blush:    '#F0D9D3',
-        rose: {
-          DEFAULT: '#D4A5A0',
-          deep:    '#B8837C',
-        },
-        gold: {
-          light:   '#E8D5B0',
-          pale:    '#F5EDD8',
-          DEFAULT: '#C9A96E',
-        },
-        beige:  '#EDE4D6',
-        taupe:  '#9E8E80',
-        brown: {
-          light:   '#7A6858',
-          DEFAULT: '#5C4A42',
-          dark:    '#2C2118',
-        },
+        ink: { DEFAULT: '#1C1917', soft: '#44403C', muted: '#78716C' },
+        ivory: '#FBF8F4',
+        sand: { DEFAULT: '#F3EDE6', dark: '#E7DED3' },
+        line: '#E9E2D9',
+        blush: { DEFAULT: '#E9CFCB', light: '#F6E9E6', deep: '#B9827C' },
+        gold: { DEFAULT: '#B08D57', light: '#D9C3A0' },
+        sale: '#A8322D',
       },
       fontFamily: {
         serif: ['var(--font-cormorant)', 'Georgia', 'serif'],
-        sans:  ['var(--font-jost)', 'system-ui', 'sans-serif'],
+        sans: ['var(--font-jost)', 'system-ui', 'sans-serif'],
       },
+      letterSpacing: { label: '0.18em' },
+      maxWidth: { shop: '1440px' },
       keyframes: {
-        fadeInUp: {
-          from: { opacity: '0', transform: 'translateY(24px)' },
-          to:   { opacity: '1', transform: 'translateY(0)' },
-        },
-        fadeInLeft: {
-          from: { opacity: '0', transform: 'translateX(-24px)' },
-          to:   { opacity: '1', transform: 'translateX(0)' },
-        },
-        float: {
-          '0%, 100%': { transform: 'translateY(0)' },
-          '50%':      { transform: 'translateY(-12px)' },
-        },
+        fadeUp: { from: { opacity: 0, transform: 'translateY(16px)' }, to: { opacity: 1, transform: 'none' } },
+        slideIn: { from: { transform: 'translateX(100%)' }, to: { transform: 'none' } },
+        slideInLeft: { from: { transform: 'translateX(-100%)' }, to: { transform: 'none' } },
+        fade: { from: { opacity: 0 }, to: { opacity: 1 } },
+        marquee: { from: { transform: 'translateX(0)' }, to: { transform: 'translateX(-50%)' } },
       },
       animation: {
-        'fade-up':   'fadeInUp 0.6s ease both',
-        'fade-left': 'fadeInLeft 0.6s ease both',
-        float:       'float 6s ease-in-out infinite',
+        'fade-up': 'fadeUp .7s cubic-bezier(.2,.7,.2,1) both',
+        'slide-in': 'slideIn .35s cubic-bezier(.2,.7,.2,1) both',
+        'slide-in-left': 'slideInLeft .35s cubic-bezier(.2,.7,.2,1) both',
+        fade: 'fade .25s ease both',
+        marquee: 'marquee 40s linear infinite',
       },
     },
   },

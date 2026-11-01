@@ -1,50 +1,30 @@
-import { Cormorant_Garamond, Jost } from 'next/font/google'
+import '@fontsource/cormorant-garamond/300.css'
+import '@fontsource/cormorant-garamond/400.css'
+import '@fontsource/cormorant-garamond/500.css'
+import '@fontsource/cormorant-garamond/300-italic.css'
+import '@fontsource/cormorant-garamond/400-italic.css'
+import '@fontsource/jost/300.css'
+import '@fontsource/jost/400.css'
+import '@fontsource/jost/500.css'
 import './globals.css'
 import Providers from './providers'
-import PWARegister from '@/components/PWARegister'
-
-const cormorant = Cormorant_Garamond({
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '600'],
-  style: ['normal', 'italic'],
-  variable: '--font-cormorant',
-  display: 'swap',
-})
-const jost = Jost({
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '600'],
-  variable: '--font-jost',
-  display: 'swap',
-})
 
 export const metadata = {
-  title: 'Susy Modas Evangelicas — Robes Chrétiennes | Kourou, Guyane',
-  description: 'Boutique de robes chrétiennes modestes et élégantes à Kourou, Guyane Française.',
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://susymodas.com'),
+  title: { default: 'Susy Modas | Mode évangélique à Kourou', template: '%s | Susy Modas' },
+  description: 'Robes, jupes et ensembles modestes et élégants. Boutique à Kourou (Guyane), retrait gratuit ou livraison à domicile, paiement sécurisé.',
   manifest: '/manifest.json',
-  themeColor: '#C9A96E',
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: 'default',
-    title: 'Susy Modas',
-  },
+  icons: { icon: '/favicon.ico', apple: '/logo-susy.png' },
+  openGraph: { type: 'website', locale: 'fr_FR', siteName: 'Susy Modas', images: ['/hero-robe.jpg'] },
 }
+
+export const viewport = { themeColor: '#FBF8F4' }
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="fr" className={`${cormorant.variable} ${jost.variable}`}>
-      <head>
-        <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#C9A96E" />
-        <link rel="apple-touch-icon" href="/logo-susy.png" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="Susy Modas" />
-      </head>
+    <html lang="fr">
       <body>
-        <Providers>
-          <PWARegister />
-          {children}
-        </Providers>
+        <Providers>{children}</Providers>
       </body>
     </html>
   )

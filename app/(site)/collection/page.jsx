@@ -1,127 +1,69 @@
-'use client'
-
-import { useState, useEffect } from 'react'
+import Link from 'next/link'
+import { Suspense } from 'react'
 import ProductCard from '@/components/product/ProductCard'
-import FilterTabs from '@/components/product/FilterTabs'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import CollectionToolbar from '@/components/product/CollectionToolbar'
+import { listProducts, availableSizes } from '@/lib/products'
+import { CATEGORIES } from '@/lib/catalog'
+import { cn } from '@/lib/utils'
 
-const SIZES = [
-    { id: 'all', label: 'Tout voir' },
-    { id: 'XS', label: 'XS' },
-    { id: 'S', label: 'S' },
-    { id: 'M', label: 'M' },
-    { id: 'L', label: 'L' },
-    { id: 'XL', label: 'XL' },
-    { id: '2XL', label: '2XL' },
-    { id: '3XL', label: '3XL' },
-]
+export const dynamic = 'force-dynamic'
 
-const PER_PAGE = 8
+function heading({ categorie, q, promo, tri }) {
+  if (q) return { title: `« ${q} »`, kicker: 'Recherche' }
+  if (promo) return { title: 'Promotions', kicker: 'Petits prix, grande élégance' }
+  const cat = CATEGORIES.find((c) => c.id === categorie)
+  if (cat) return { title: cat.label, kicker: cat.description }
+  if (tri === 'nouveautes') return { title: 'Nouveautés', kicker: 'Les dernières arrivées' }
+  return { title: 'Toute la collection', kicker: 'Mode évangélique' }
+}
 
-export default function CollectionPage() {
-    const [products, setProducts] = useState([])
-    const [loading, setLoading] = useState(true)
-    const [activeFilter, setActiveFilter] = useState('all')
-    const [page, setPage] = useState(1)
+export async function generateMetadata({ searchParams }) {
+  return { title: heading(searchParams).title.replace(/[«»]/g, '').trim() }
+}
 
-    useEffect(() => {
-        async function fetchProducts() {
-            setLoading(true)
-            try {
-                const url = activeFilter === 'all'
-                    ? '/api/products'
-                    : `/api/products?size=${activeFilter}`
-                const res = await fetch(url)
-                const data = await res.json()
-                setProducts(data.products ?? [])
-                setPage(1)
-            } catch (err) {
-                console.error(err)
-            } finally {
-                setLoading(false)
-            }
-        }
-        fetchProducts()
-    }, [activeFilter])
+export default async function CollectionPage({ searchParams }) {
+  const categorie = CATEGORIES.some((c) => c.id === searchParams.categorie) ? searchParams.categorie : undefined
+  const q = typeof searchParams.q === 'string' ? searchParams.q.slice(0, 60) : undefined
+  const promo = searchParams.promo === '1'
+  const [products, sizes] = await Promise.all([
+    listProducts({ category: categorie, q, size: searchParams.taille, sort: searchParams.tri, promo, inStock: searchParams.dispo === '1' }),
+    availableSizes(categorie),
+  ])
+  const { title, kicker } = heading({ categorie, q, promo, tri: searchParams.tri })
 
-    const totalPages = Math.ceil(products.length / PER_PAGE)
-    const paginated = products.slice((page - 1) * PER_PAGE, page * PER_PAGE)
+  const chip = (active) => cn('shrink-0 border px-4 py-2 text-[12px] uppercase tracking-[0.12em] transition', active ? 'border-ink bg-ink text-ivory' : 'border-line hover:border-ink')
 
-    function goTo(n) {
-        setPage(n)
-        window.scrollTo({ top: 0, behavior: 'smooth' })
-    }
+  return (
+    <>
+      <section className="shop-container pb-8 pt-10 text-center lg:pt-14">
+        <p className="label text-ink-muted">{kicker}</p>
+        <h1 className="display mt-3 text-5xl lg:text-6xl">{title}</h1>
+        <nav className="no-scrollbar -mx-4 mt-8 flex gap-2 overflow-x-auto px-4 sm:justify-center">
+          <Link href="/collection" className={chip(!categorie && !promo && !q)}>Tout</Link>
+          {CATEGORIES.map((c) => (
+            <Link key={c.id} href={`/collection?categorie=${c.id}`} className={chip(categorie === c.id)}>{c.label}</Link>
+          ))}
+          <Link href="/collection?promo=1" className={cn(chip(promo), !promo && 'text-sale')}>Promotions</Link>
+        </nav>
+      </section>
 
-    return (
-        <div className="min-h-screen bg-cream py-12 px-4 sm:px-10">
-            <div className="mx-auto max-w-7xl">
+      <Suspense>
+        <CollectionToolbar sizes={sizes} count={products.length} />
+      </Suspense>
 
-                {/* Titre */}
-                <div className="text-center mb-10">
-                    <p className="font-sans text-xs tracking-widest uppercase text-gold mb-2">Nos Créations</p>
-                    <h1 className="font-serif text-3xl sm:text-4xl text-brown">
-                        Toute la <em className="text-gold italic">Collection</em>
-                    </h1>
-                </div>
-
-                {/* Filtres tailles */}
-                <FilterTabs categories={SIZES} active={activeFilter} onChange={setActiveFilter} />
-
-                {/* Grille */}
-                {loading ? (
-                    <div className="mt-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
-                        {[...Array(8)].map((_, i) => (
-                            <div key={i} className="rounded-2xl bg-beige animate-pulse aspect-[3/4]" />
-                        ))}
-                    </div>
-                ) : paginated.length === 0 ? (
-                    <p className="text-center font-serif italic text-taupe text-lg mt-16">
-                        Aucune robe disponible dans cette taille pour l&apos;instant.
-                    </p>
-                ) : (
-                    <div className="mt-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
-                        {paginated.map((product) => (
-                            <ProductCard key={product.id} product={product} />
-                        ))}
-                    </div>
-                )}
-
-                {/* Pagination */}
-                {totalPages > 1 && (
-                    <div className="flex items-center justify-center gap-3 mt-14">
-                        <button onClick={() => goTo(page - 1)} disabled={page === 1}
-                            className="w-9 h-9 rounded-full border border-gold-light flex items-center justify-center text-brown-light hover:border-gold hover:text-gold transition-colors disabled:opacity-30">
-                            <ChevronLeft size={16} />
-                        </button>
-
-                        {[...Array(totalPages)].map((_, i) => {
-                            const n = i + 1
-                            return (
-                                <button key={n} onClick={() => goTo(n)}
-                                    className={`w-9 h-9 rounded-full font-sans text-sm font-medium transition-colors ${n === page
-                                            ? 'bg-gold text-white'
-                                            : 'border border-gold-light text-brown-light hover:border-gold hover:text-gold'
-                                        }`}>
-                                    {n}
-                                </button>
-                            )
-                        })}
-
-                        <button onClick={() => goTo(page + 1)} disabled={page === totalPages}
-                            className="w-9 h-9 rounded-full border border-gold-light flex items-center justify-center text-brown-light hover:border-gold hover:text-gold transition-colors disabled:opacity-30">
-                            <ChevronRight size={16} />
-                        </button>
-                    </div>
-                )}
-
-                {/* Indicateur page x/x */}
-                {totalPages > 1 && (
-                    <p className="text-center font-sans text-xs text-taupe mt-3 tracking-widest">
-                        {page} / {totalPages}
-                    </p>
-                )}
-
-            </div>
-        </div>
-    )
+      <section className="shop-container py-10">
+        {products.length ? (
+          <div className="grid grid-cols-2 gap-x-3 gap-y-10 sm:gap-x-5 md:grid-cols-3 xl:grid-cols-4">
+            {products.map((p, i) => <ProductCard key={p.id} product={p} priority={i < 4} />)}
+          </div>
+        ) : (
+          <div className="py-24 text-center">
+            <p className="display text-3xl">Aucun article ne correspond</p>
+            <p className="mt-3 text-[14px] text-ink-muted">Essayez une autre taille ou une autre catégorie.</p>
+            <Link href="/collection" className="btn-outline mt-8">Voir toute la collection</Link>
+          </div>
+        )}
+      </section>
+    </>
+  )
 }

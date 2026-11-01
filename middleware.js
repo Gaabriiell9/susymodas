@@ -1,27 +1,19 @@
-// middleware.js  (à la RACINE du projet, pas dans /app)
+// Protection des espaces privés. L'espace gestion n'est visible que pour le compte admin
+// (vérifié ici via le jeton, puis à nouveau en base dans chaque page et route API).
+import { withAuth } from 'next-auth/middleware'
 import { NextResponse } from 'next/server'
-import { verifyToken } from '@/lib/auth'
 
-export async function middleware(request) {
-  const { pathname } = request.nextUrl
-
-  // Protège toutes les routes /admin sauf /admin/login
-  if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
-    const token = request.cookies.get('susy_admin_token')?.value
-
-    if (!token) {
-      return NextResponse.redirect(new URL('/admin/login', request.url))
+export default withAuth(
+  function middleware(req) {
+    if (req.nextUrl.pathname.startsWith('/gestion') && req.nextauth.token?.role !== 'ADMIN') {
+      return NextResponse.rewrite(new URL('/introuvable', req.url))
     }
-
-    const payload = await verifyToken(token)
-    if (!payload) {
-      return NextResponse.redirect(new URL('/admin/login', request.url))
-    }
+    return NextResponse.next()
+  },
+  {
+    callbacks: { authorized: ({ token }) => !!token },
+    pages: { signIn: '/connexion' },
   }
+)
 
-  return NextResponse.next()
-}
-
-export const config = {
-  matcher: ['/admin/:path*'],
-}
+export const config = { matcher: ['/gestion/:path*', '/compte/:path*'] }

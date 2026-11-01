@@ -1,26 +1,17 @@
 import Link from 'next/link'
-import Image from 'next/image'
 import { cn } from '@/lib/utils'
 
-export default function Logo({ className, light = false }) {
+export default function Logo({ className, light = false, compact = false }) {
   return (
-    <Link href="/" className={cn('flex items-center gap-3 no-underline', className)}>
-      <Image
-        src="/logo-susy.png"
-        alt="Susy Modas"
-        width={56}
-        height={56}
-        className="object-contain rounded-full flex-shrink-0"
-        priority
-      />
-      <div className="flex flex-col leading-none">
-        <span className={cn('font-serif text-[1.35rem] font-semibold tracking-[0.02em]', light ? 'text-white' : 'text-brown')}>
-          Susy Modas
+    <Link href="/" aria-label="Susy Modas, accueil" className={cn('inline-flex flex-col items-center leading-none', light ? 'text-ivory' : 'text-ink', className)}>
+      <span className={cn('font-serif font-normal tracking-[0.14em] uppercase', compact ? 'text-[22px]' : 'text-[26px] sm:text-[30px]')}>
+        Susy Modas
+      </span>
+      {!compact && (
+        <span className={cn('mt-1 text-[9px] uppercase tracking-[0.42em]', light ? 'text-ivory/70' : 'text-ink-muted')}>
+          Mode évangélique
         </span>
-        <span className="font-sans text-[0.6rem] tracking-[0.28em] uppercase text-gold font-medium mt-0.5">
-          Evangelicas · Kourou
-        </span>
-      </div>
+      )}
     </Link>
   )
 }

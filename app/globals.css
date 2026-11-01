@@ -2,73 +2,32 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── Scrollbar ───────────────────────────────────────── */
-::-webkit-scrollbar {
-  width: 5px;
-}
-
-::-webkit-scrollbar-track {
-  background: #FAF7F2;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #C9A96E;
-  border-radius: 4px;
-}
-
-/* ── Smooth scroll ───────────────────────────────────── */
-html {
-  scroll-behavior: smooth;
-}
-
-/* ── Page transition ─────────────────────────────────── */
-main {
-  animation: fadeIn 0.3s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* ── Selection ───────────────────────────────────────── */
-::selection {
-  background: #E8D5B0;
-  color: #2C2118;
-}
-
-/* ── Base ────────────────────────────────────────────── */
 @layer base {
-  body {
-    @apply bg-cream text-brown-dark font-sans antialiased;
-  }
+  :root { --font-cormorant: 'Cormorant Garamond'; --font-jost: 'Jost'; }
+  html { -webkit-tap-highlight-color: transparent; scroll-behavior: smooth; }
+  body { @apply bg-ivory text-ink font-sans antialiased; font-weight: 400; }
+  ::selection { @apply bg-blush text-ink; }
+  input, select, textarea { @apply text-base sm:text-sm; }
 }
 
-/* ── Composants réutilisables ────────────────────────── */
 @layer components {
-  .section-label {
-    @apply text-gold text-xs tracking-[0.25em] uppercase font-medium font-sans;
-  }
+  .shop-container { @apply mx-auto w-full max-w-shop px-4 sm:px-6 lg:px-10; }
+  .label { @apply text-[11px] uppercase tracking-label font-medium; }
+  .display { @apply font-serif font-light tracking-tight; }
 
-  .section-title {
-    @apply font-serif text-brown font-light leading-tight;
-    font-size: clamp(2rem, 3.5vw, 3rem);
-  }
+  .btn { @apply inline-flex items-center justify-center gap-2 h-12 px-7 text-[12px] uppercase tracking-label font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed; }
+  .btn-dark { @apply btn bg-ink text-ivory hover:bg-ink-soft; }
+  .btn-light { @apply btn bg-ivory text-ink hover:bg-white; }
+  .btn-outline { @apply btn border border-ink text-ink hover:bg-ink hover:text-ivory; }
+  .btn-ghost { @apply btn border border-line text-ink hover:border-ink; }
 
-  .divider-ornament {
-    @apply flex items-center justify-center gap-3 mt-4;
-  }
+  .field { @apply w-full h-12 border border-line bg-white px-4 text-ink placeholder:text-ink-muted/60 outline-none transition focus:border-ink; }
+  .field-label { @apply block mb-1.5 text-[11px] uppercase tracking-label text-ink-soft; }
 
-  .divider-ornament::before,
-  .divider-ornament::after {
-    content: '';
-    @apply h-px w-14 bg-gold-light;
-  }
+  .link-underline { @apply relative after:absolute after:left-0 after:-bottom-0.5 after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-current after:transition-transform after:duration-300 hover:after:scale-x-100; }
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 }

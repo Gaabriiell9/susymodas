@@ -1,54 +1,40 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/app/api/auth/[...nextauth]/route'
 import prisma from '@/lib/prisma'
+import { getSession } from '@/lib/auth'
+import { serializeProduct } from '@/lib/catalog'
+
+export const dynamic = 'force-dynamic'
 
 export async function GET() {
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.id) return NextResponse.json({ items: [] })
-
-    const wishlistItems = await prisma.wishlistItem.findMany({
-        where: { userId: session.user.id },
-        include: { product: true },
-    })
-
-    const items = wishlistItems.map(w => ({
-        id: w.product.id,
-        name: w.product.name,
-        price: w.product.price,
-        slug: w.product.slug,
-        images: w.product.images,
-        sizes: w.product.sizes,
-        tags: w.product.tags,
-    }))
-
-    return NextResponse.json({ items })
+  const session = await getSession()
+  if (!session?.user?.id) return NextResponse.json({ items: [] })
+  const rows = await prisma.wishlistItem.findMany({
+    where: { userId: session.user.id, product: { active: true } },
+    include: { product: true },
+  })
+  return NextResponse.json({ items: rows.map((r) => serializeProduct(r.product)) })
 }
 
 export async function POST(request) {
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.id) return NextResponse.json({ error: 'Non connecté' }, { status: 401 })
-
-    const { productId } = await request.json()
-
+  const session = await getSession()
+  if (!session?.user?.id) return NextResponse.json({ error: 'Non connecté' }, { status: 401 })
+  const ids = [].concat((await request.json()).productId ?? []).map(Number).filter(Boolean)
+  for (const productId of ids) {
+    const exists = await prisma.product.findUnique({ where: { id: productId }, select: { id: true } })
+    if (!exists) continue
     await prisma.wishlistItem.upsert({
-        where: { userId_productId: { userId: session.user.id, productId } },
-        update: {},
-        create: { userId: session.user.id, productId },
+      where: { userId_productId: { userId: session.user.id, productId } },
+      update: {},
+      create: { userId: session.user.id, productId },
     })
-
-    return NextResponse.json({ success: true })
+  }
+  return NextResponse.json({ success: true })
 }
 
 export async function DELETE(request) {
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.id) return NextResponse.json({ error: 'Non connecté' }, { status: 401 })
-
-    const { productId } = await request.json()
-
-    await prisma.wishlistItem.deleteMany({
-        where: { userId: session.user.id, productId },
-    })
-
-    return NextResponse.json({ success: true })
+  const session = await getSession()
+  if (!session?.user?.id) return NextResponse.json({ error: 'Non connecté' }, { status: 401 })
+  const { productId } = await request.json()
+  await prisma.wishlistItem.deleteMany({ where: { userId: session.user.id, productId: Number(productId) } })
+  return NextResponse.json({ success: true })
 }
