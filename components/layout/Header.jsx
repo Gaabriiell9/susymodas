@@ -58,8 +58,8 @@ export default function Header({ announcement }) {
     <>
       {announcement && (
         <div className="bg-ink text-ivory">
-          <div className="shop-container flex h-9 items-center justify-center text-center text-[11px] tracking-[0.12em] uppercase">
-            {announcement}
+          <div className="shop-container flex h-9 items-center justify-center text-center text-[10px] tracking-[0.1em] uppercase sm:text-[11px] sm:tracking-[0.12em]">
+            <span className="truncate">{announcement}</span>
           </div>
         </div>
       )}

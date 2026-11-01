@@ -63,10 +63,10 @@ export default async function HomePage() {
               ) : (
                 <div className={`absolute inset-0 ${['bg-blush-light', 'bg-sand-dark', 'bg-[#EFE6DA]', 'bg-blush', 'bg-[#E9E4DC]', 'bg-sand'][i % 6]}`} />
               )}
-              <div className="absolute inset-0 bg-gradient-to-t from-ink/45 to-transparent" />
-              <div className="absolute inset-x-0 bottom-0 p-4 text-ivory">
+              {covers[c.id] && <div className="absolute inset-0 bg-gradient-to-t from-ink/45 to-transparent" />}
+              <div className={`absolute inset-x-0 bottom-0 p-4 ${covers[c.id] ? 'text-ivory' : 'text-ink'}`}>
                 <p className="font-serif text-2xl font-light">{c.label}</p>
-                {counts[c.id] ? <p className="mt-0.5 text-[11px] uppercase tracking-label text-ivory/80">{counts[c.id]} pièces</p> : null}
+                {counts[c.id] ? <p className="mt-0.5 text-[11px] uppercase tracking-label opacity-80">{counts[c.id]} pièces</p> : null}
               </div>
             </Link>
           ))}
