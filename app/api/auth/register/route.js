@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import prisma from '@/lib/prisma'
 import { issueVerification } from '@/lib/server/verification'
+import { isAdminEmail } from '@/lib/auth'
+import { emailEnabled } from '@/lib/email'
 
 export async function POST(req) {
   try {
@@ -13,6 +15,9 @@ export async function POST(req) {
       return NextResponse.json({ error: 'Adresse e-mail invalide.' }, { status: 400 })
     if (password.length < 8)
       return NextResponse.json({ error: 'Le mot de passe doit faire au moins 8 caractères.' }, { status: 400 })
+
+    if (isAdminEmail(email) && !emailEnabled())
+      return NextResponse.json({ error: 'Ce compte existe déjà. Connectez-vous.' }, { status: 409 })
 
     const existing = await prisma.user.findUnique({ where: { email } })
     if (existing?.emailVerified)

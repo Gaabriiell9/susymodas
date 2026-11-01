@@ -5,6 +5,7 @@ import prisma from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
 import ProductImage from '@/components/ui/ProductImage'
 import SignOutButton from './SignOutButton'
+import PasswordForm from './PasswordForm'
 import { DELIVERY_LABEL, ORDER_STATUS, cn, formatDate, formatPrice } from '@/lib/utils'
 
 export const metadata = { title: 'Mon compte' }
@@ -33,6 +34,8 @@ export default async function AccountPage() {
           <SignOutButton />
         </div>
       </div>
+
+      <div className="mt-6"><PasswordForm /></div>
 
       <h2 className="label mb-6 mt-12">Mes commandes</h2>
       {orders.length === 0 ? (
