@@ -92,6 +92,9 @@ export default function Footer() {
             {' · '}
             <Link href="#" className="text-gold hover:text-gold-light transition-colors">Mentions Légales</Link>
             {' · '}Conçu avec ✦ et foi
+            {' · '}Réalisé par{' '}
+            <a href="https://gf-web.fr" target="_blank" rel="noopener noreferrer"
+              className="text-gold hover:text-gold-light transition-colors">gf-web.fr</a>
           </span>
         </div>
       </div>
