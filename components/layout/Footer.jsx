@@ -49,7 +49,10 @@ export default function Footer({ settings }) {
           </div>
         </div>
         <div className="border-t border-paper/15">
-          <p className="shop-container py-4 text-xs text-paper/50">© {new Date().getFullYear()} Susy Modas Evangelicas, Kourou, Guyane française</p>
+          <p className="shop-container py-4 text-xs text-paper/50">
+            © {new Date().getFullYear()} Susy Modas Evangelicas, Kourou, Guyane française. Réalisé par{' '}
+            <a href="https://gf-web.fr" target="_blank" rel="noopener noreferrer" className="text-paper/80 underline-offset-2 hover:text-paper hover:underline">gf-web.fr</a>
+          </p>
         </div>
       </div>
     </footer>
