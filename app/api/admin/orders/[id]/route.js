@@ -9,6 +9,6 @@ const STATUSES = ['CONFIRMED', 'READY', 'SHIPPED', 'DELIVERED', 'CANCELLED']
 export const PATCH = adminRoute(async (request, { params }) => {
   const { status } = await request.json()
   if (!STATUSES.includes(status)) return NextResponse.json({ error: 'Statut invalide' }, { status: 400 })
-  const order = await prisma.order.update({ where: { id: parseInt(params.id, 10) }, data: { status } })
+  const order = await prisma.order.update({ where: { id: parseInt((await params).id, 10) }, data: { status } })
   return NextResponse.json({ order })
 })

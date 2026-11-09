@@ -9,7 +9,7 @@ import { revalidatePath } from 'next/cache'
 export const dynamic = 'force-dynamic'
 
 export const PUT = adminRoute(async (request, { params }) => {
-  const id = parseInt(params.id, 10)
+  const id = parseInt((await params).id, 10)
   const current = await prisma.product.findUnique({ where: { id } })
   if (!current) return NextResponse.json({ error: 'Article introuvable' }, { status: 404 })
 
@@ -36,7 +36,7 @@ export const PUT = adminRoute(async (request, { params }) => {
 })
 
 export const DELETE = adminRoute(async (_request, { params }) => {
-  const id = parseInt(params.id, 10)
+  const id = parseInt((await params).id, 10)
   const product = await prisma.product.findUnique({ where: { id } })
   if (!product) return NextResponse.json({ error: 'Article introuvable' }, { status: 404 })
   // L'historique des ventes est conservé (nom et photo copiés dans chaque ligne de commande)

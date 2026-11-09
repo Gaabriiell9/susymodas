@@ -1,7 +1,8 @@
 import prisma from '@/lib/prisma'
 import OrdersBoard from '@/components/gestion/OrdersBoard'
 
-export default async function VentesPage({ searchParams }) {
+export default async function VentesPage({ searchParams: sp }) {
+  const searchParams = await sp
   const orders = await prisma.order.findMany({
     where: { status: { not: 'PENDING' } },
     include: { items: true },

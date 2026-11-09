@@ -7,7 +7,7 @@ import { getSettings } from '@/lib/settings'
 export const revalidate = 60
 
 export async function generateMetadata({ params }) {
-  const product = await getProductBySlug(params.slug)
+  const product = await getProductBySlug((await params).slug)
   if (!product) return { title: 'Article introuvable' }
   return {
     title: product.name,
@@ -17,7 +17,7 @@ export async function generateMetadata({ params }) {
 }
 
 export default async function ProductPage({ params }) {
-  const product = await getProductBySlug(params.slug)
+  const product = await getProductBySlug((await params).slug)
   if (!product) notFound()
   const [related, settings] = await Promise.all([getRelated(product), getSettings()])
 

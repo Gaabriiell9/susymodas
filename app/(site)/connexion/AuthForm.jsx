@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils'
 
 export default function AuthForm({ google }) {
   const params = useSearchParams()
-  const callbackUrl = params.get('callbackUrl') || '/compte'
+  const callbackUrl = safeCallback(params.get('callbackUrl'))
   const [mode, setMode] = useState(params.get('mode') === 'inscription' ? 'register' : 'login')
   const [form, setForm] = useState({ name: '', email: '', password: '' })
   const [code, setCode] = useState('')
@@ -24,6 +24,7 @@ export default function AuthForm({ google }) {
       setMode('verify'); setInfo('Votre e-mail n\'est pas encore confirmé. Nous venons de vous renvoyer un code.')
       return
     }
+    if (res?.error === 'TOO_MANY_ATTEMPTS') { setError('Trop de tentatives. Réessayez dans 15 minutes.'); return }
     if (res?.error) { setError('E-mail ou mot de passe incorrect.'); return }
     window.location.href = callbackUrl
   }
@@ -122,4 +123,16 @@ export default function AuthForm({ google }) {
       </div>
     </div>
   )
+}
+
+// N'accepte qu'une redirection vers une page de ce site (évite les liens piégés vers un faux site)
+function safeCallback(raw) {
+  if (!raw || typeof window === 'undefined') return '/compte'
+  try {
+    const url = new URL(raw, window.location.origin)
+    if (url.origin !== window.location.origin) return '/compte'
+    return url.pathname + url.search + url.hash
+  } catch {
+    return '/compte'
+  }
 }

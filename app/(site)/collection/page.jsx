@@ -4,9 +4,9 @@ import { parseFilters, titleFor } from '@/components/shop/filters'
 export const dynamic = 'force-dynamic'
 
 export async function generateMetadata({ searchParams }) {
-  return { title: titleFor(parseFilters(searchParams)).replace(/[«»]/g, '').trim() }
+  return { title: titleFor(parseFilters(await searchParams)).replace(/[«»]/g, '').trim() }
 }
 
-export default function CollectionPage({ searchParams }) {
-  return <ShopListing searchParams={searchParams} />
+export default async function CollectionPage({ searchParams }) {
+  return <ShopListing searchParams={await searchParams} />
 }
