@@ -1,6 +1,8 @@
 /** @type {import('tailwindcss').Config} */
 // Toutes les couleurs et polices passent par les tokens Hallmark (app/tokens.css).
 const v = (name) => `var(--${name})`
+// couleur avec support des opacités Tailwind (bg-ink/40, etc.)
+const c = (name) => `color-mix(in oklab, var(--${name}) calc(<alpha-value> * 100%), transparent)`
 
 module.exports = {
   content: ['./components/**/*.{js,jsx}', './app/**/*.{js,jsx}'],
@@ -8,20 +10,20 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        paper: { DEFAULT: v('color-paper'), 2: v('color-paper-2'), 3: v('color-paper-3') },
-        ink: { DEFAULT: v('color-ink'), 2: v('color-ink-2'), soft: v('color-ink-2'), muted: v('color-muted') },
-        muted: v('color-muted'),
-        rule: { DEFAULT: v('color-rule'), ink: v('color-rule-ink') },
-        accent: { DEFAULT: v('color-accent'), 2: v('color-accent-2'), ink: v('color-accent-ink'), soft: v('color-accent-soft') },
-        focus: v('color-focus'),
-        error: v('color-error'),
-        success: v('color-success'),
+        paper: { DEFAULT: c('color-paper'), 2: c('color-paper-2'), 3: c('color-paper-3') },
+        ink: { DEFAULT: c('color-ink'), 2: c('color-ink-2'), soft: c('color-ink-2'), muted: c('color-muted') },
+        muted: c('color-muted'),
+        rule: { DEFAULT: c('color-rule'), ink: c('color-rule-ink') },
+        accent: { DEFAULT: c('color-accent'), 2: c('color-accent-2'), ink: c('color-accent-ink'), soft: c('color-accent-soft') },
+        focus: c('color-focus'),
+        error: c('color-error'),
+        success: c('color-success'),
         // alias historiques (espace gestion)
-        ivory: v('color-paper'),
-        sand: { DEFAULT: v('color-paper-2'), dark: v('color-paper-3') },
-        line: v('color-rule'),
-        sale: v('color-accent'),
-        blush: { DEFAULT: v('color-accent-soft'), light: v('color-paper-2') },
+        ivory: c('color-paper'),
+        sand: { DEFAULT: c('color-paper-2'), dark: c('color-paper-3') },
+        line: c('color-rule'),
+        sale: c('color-accent'),
+        blush: { DEFAULT: c('color-accent-soft'), light: c('color-paper-2') },
       },
       fontFamily: {
         display: v('font-display'),

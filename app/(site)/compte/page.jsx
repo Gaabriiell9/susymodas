@@ -25,7 +25,7 @@ export default async function AccountPage() {
     <div className="shop-container max-w-4xl py-12 lg:py-16">
       <div className="flex flex-wrap items-end justify-between gap-4 border-b border-line pb-8">
         <div>
-          <h1 className="text-display-s">Bonjour {session.user.name?.split(' ')[0] || ''}</h1>
+          <h1 >Bonjour {session.user.name?.split(' ')[0] || ''}</h1>
           <p className="mt-2 text-[14px] text-ink-muted">{session.user.email}</p>
         </div>
         <div className="flex gap-3">
@@ -40,7 +40,7 @@ export default async function AccountPage() {
       {orders.length === 0 ? (
         <div className="border border-dashed border-line py-16 text-center">
           <p className="display text-2xl">Aucune commande pour l&apos;instant</p>
-          <Link href="/collection" className="btn-outline mt-6">Découvrir la collection</Link>
+          <Link href="/" className="btn-outline mt-6">Découvrir la collection</Link>
         </div>
       ) : (
         <ul className="space-y-4">

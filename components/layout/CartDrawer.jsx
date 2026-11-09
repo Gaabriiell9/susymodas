@@ -33,9 +33,9 @@ export default function CartDrawer() {
 
         {items.length === 0 ? (
           <div className="flex flex-1 flex-col items-start justify-center px-6">
-            <p className="display text-[2.25rem]">Votre panier est vide</p>
+            <p className="text-xl font-semibold">Votre panier est vide</p>
             <p className="mt-3 text-muted">Laissez-vous inspirer par nos dernières pièces.</p>
-            <Link href="/collection?tri=nouveautes" onClick={closeCart} className="btn-primary mt-8">Voir les nouveautés</Link>
+            <Link href="/?tri=nouveautes" onClick={closeCart} className="btn-primary mt-8">Voir les nouveautés</Link>
           </div>
         ) : (
           <>
@@ -80,7 +80,7 @@ export default function CartDrawer() {
             <div className="border-t-2 border-rule-ink bg-paper-2 px-6 py-6">
               <dl className="flex items-baseline justify-between">
                 <dt className="font-medium">Sous-total</dt>
-                <dd className="display text-[2rem] tabular-nums">{formatPrice(subtotal)}</dd>
+                <dd className="text-xl font-semibold tabular-nums">{formatPrice(subtotal)}</dd>
               </dl>
               <p className="mt-1 text-sm text-muted">Retrait gratuit à Kourou, ou livraison {formatPrice(settings?.shippingCost ?? 0)}.</p>
               <Link href="/commande" onClick={closeCart} className="btn-primary mt-5 w-full">Commander</Link>

@@ -1,60 +1,66 @@
 import Link from 'next/link'
+import { Store, Truck, ShieldCheck, RotateCcw, MessageCircle } from 'lucide-react'
 import { CATEGORIES } from '@/lib/catalog'
-import { whatsappLink } from '@/lib/utils'
+import { formatPrice, whatsappLink } from '@/lib/utils'
 
 export default function Footer({ settings }) {
+  const perks = [
+    { icon: Store, title: 'Retrait gratuit', text: 'En boutique à Kourou' },
+    { icon: Truck, title: 'Livraison à domicile', text: settings.freeShippingThreshold ? `Offerte dès ${formatPrice(settings.freeShippingThreshold)}` : formatPrice(settings.shippingCost) },
+    { icon: ShieldCheck, title: 'Paiement sécurisé', text: 'Carte, Apple Pay, Google Pay' },
+    { icon: RotateCcw, title: 'Échange 14 jours', text: 'En boutique, article non porté' },
+  ]
   return (
-    <footer className="on-ink bg-ink pb-10 pt-section-s text-paper">
-      <div className="shop-container">
-        <p className="display text-[clamp(3.5rem,11vw,10rem)] leading-[0.9] text-paper" aria-hidden="true">Susy Modas</p>
+    <footer className="mt-auto">
+      <div className="border-y border-rule bg-paper-2">
+        <ul className="shop-container grid grid-cols-2 gap-y-5 py-6 lg:grid-cols-4">
+          {perks.map(({ icon: Icon, title, text }) => (
+            <li key={title} className="flex items-start gap-3 pr-3">
+              <Icon size={22} strokeWidth={1.5} className="mt-0.5 shrink-0 text-accent" aria-hidden="true" />
+              <span className="text-sm"><span className="block font-semibold">{title}</span><span className="block text-muted">{text}</span></span>
+            </li>
+          ))}
+        </ul>
+      </div>
 
-        <div className="mt-16 grid gap-10 border-t border-paper/20 pt-10 sm:grid-cols-2 lg:grid-cols-12">
-          <div className="lg:col-span-4">
-            <p className="max-w-sm text-paper/80">
-              Robes et ensembles modestes, choisis avec soin pour sublimer chaque femme, à l&apos;église comme au quotidien.
-            </p>
-            <a href={whatsappLink(settings.whatsapp, 'Bonjour Susy Modas !')} target="_blank" rel="noopener noreferrer" className="btn-light mt-6">
-              Écrire sur WhatsApp
+      <div className="on-ink bg-ink text-paper">
+        <div className="shop-container grid gap-8 py-10 sm:grid-cols-2 lg:grid-cols-4">
+          <div>
+            <p className="wordmark text-[1.75rem]">Susy Modas</p>
+            <p className="mt-3 text-sm text-paper/70">Mode évangélique, robes et ensembles modestes. Boutique à Kourou, Guyane.</p>
+            <a href={whatsappLink(settings.whatsapp, 'Bonjour Susy Modas !')} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex min-h-10 items-center gap-2 border border-paper/30 px-4 text-sm font-medium hover:bg-paper hover:text-ink">
+              <MessageCircle size={16} aria-hidden="true" /> WhatsApp
             </a>
           </div>
-
-          <nav aria-label="Boutique" className="lg:col-span-3">
-            <p className="text-sm font-medium text-paper/60">Boutique</p>
-            <ul className="mt-4 space-y-2">
-              <li><Link href="/collection?tri=nouveautes" className="link-underline whitespace-nowrap">Nouveautés</Link></li>
-              {CATEGORIES.slice(0, 5).map((c) => (
-                <li key={c.id}><Link href={`/collection?categorie=${c.id}`} className="link-underline whitespace-nowrap">{c.label}</Link></li>
-              ))}
-              <li><Link href="/collection?promo=1" className="link-underline whitespace-nowrap">Promotions</Link></li>
-            </ul>
-          </nav>
-
-          <nav aria-label="Aide" className="lg:col-span-2">
-            <p className="text-sm font-medium text-paper/60">Aide</p>
-            <ul className="mt-4 space-y-2">
-              <li><Link href="/boutique#livraison" className="link-underline whitespace-nowrap">Livraison et retrait</Link></li>
-              <li><Link href="/boutique#echanges" className="link-underline whitespace-nowrap">Échanges</Link></li>
-              <li><Link href="/compte" className="link-underline whitespace-nowrap">Mon compte</Link></li>
-              <li><Link href="/favoris" className="link-underline whitespace-nowrap">Mes favoris</Link></li>
-            </ul>
-          </nav>
-
-          <div className="lg:col-span-3">
-            <p className="text-sm font-medium text-paper/60">Notre boutique</p>
-            <address className="mt-4 not-italic text-paper/80">
-              {settings.storeAddress}
-              <br />
-              {settings.storeHours}
-            </address>
-            <Link href="/boutique" className="link mt-4 inline-block">Venir nous voir</Link>
+          <FooterNav title="Rayons">
+            {CATEGORIES.map((c) => <li key={c.id}><Link href={`/?categorie=${c.id}`} className="link-underline">{c.label}</Link></li>)}
+            <li><Link href="/?promo=1" className="link-underline">Promotions</Link></li>
+          </FooterNav>
+          <FooterNav title="Aide">
+            <li><Link href="/boutique#livraison" className="link-underline">Livraison et retrait</Link></li>
+            <li><Link href="/boutique#echanges" className="link-underline">Échanges</Link></li>
+            <li><Link href="/compte" className="link-underline">Mes commandes</Link></li>
+            <li><Link href="/favoris" className="link-underline">Mes favoris</Link></li>
+          </FooterNav>
+          <div>
+            <p className="text-sm font-semibold">Notre boutique</p>
+            <address className="mt-3 text-sm not-italic text-paper/70">{settings.storeAddress}<br />{settings.storeHours}</address>
+            <Link href="/boutique" className="link-underline mt-3 inline-block text-sm">Plan et itinéraire</Link>
           </div>
         </div>
-
-        <div className="mt-16 flex flex-col gap-2 border-t border-paper/20 pt-6 text-sm text-paper/60 sm:flex-row sm:justify-between">
-          <p>© {new Date().getFullYear()} Susy Modas Evangelicas, Kourou, Guyane française</p>
-          <p>Paiement sécurisé par carte bancaire, Apple Pay et Google Pay</p>
+        <div className="border-t border-paper/15">
+          <p className="shop-container py-4 text-xs text-paper/50">© {new Date().getFullYear()} Susy Modas Evangelicas, Kourou, Guyane française</p>
         </div>
       </div>
     </footer>
+  )
+}
+
+function FooterNav({ title, children }) {
+  return (
+    <nav aria-label={title}>
+      <p className="text-sm font-semibold">{title}</p>
+      <ul className="mt-3 space-y-1.5 text-sm text-paper/70">{children}</ul>
+    </nav>
   )
 }

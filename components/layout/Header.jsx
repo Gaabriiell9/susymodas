@@ -1,35 +1,42 @@
 'use client'
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
-import { useEffect, useRef, useState } from 'react'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { Suspense, useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
-import { Heart, Menu, Search, ShoppingBag, User, X } from 'lucide-react'
+import { Heart, Menu, Search, ShoppingBag, User, X, Store } from 'lucide-react'
 import Logo from '@/components/ui/Logo'
 import { useCart } from '@/context/CartContext'
 import { useWishlist } from '@/context/WishlistContext'
 import { CATEGORIES } from '@/lib/catalog'
 import { cn } from '@/lib/utils'
 
-const NAV = [
-  { href: '/collection?tri=nouveautes', label: 'Nouveautés' },
-  { href: '/collection', label: 'Collection' },
-  { href: '/boutique', label: 'Notre boutique' },
+const CATS = [
+  { href: '/?tri=nouveautes', label: 'Nouveautés', match: (p) => p.get('tri') === 'nouveautes' },
+  ...CATEGORIES.map((c) => ({ href: `/?categorie=${c.id}`, label: c.label, match: (p) => p.get('categorie') === c.id })),
+  { href: '/?promo=1', label: 'Promotions', accent: true, match: (p) => p.get('promo') === '1' },
 ]
 
 export default function Header({ announcement }) {
+  return (
+    <Suspense fallback={<div className="h-[148px]" />}>
+      <HeaderInner announcement={announcement} />
+    </Suspense>
+  )
+}
+
+function HeaderInner({ announcement }) {
   const pathname = usePathname()
+  const params = useSearchParams()
   const router = useRouter()
   const { data: session } = useSession()
   const { itemCount, openCart, ready } = useCart()
   const { count: wishCount } = useWishlist()
   const [menuOpen, setMenuOpen] = useState(false)
-  const [searchOpen, setSearchOpen] = useState(false)
-  const [query, setQuery] = useState('')
-  const searchRef = useRef(null)
+  const [query, setQuery] = useState(params.get('q') ?? '')
   const isAdmin = session?.user?.role === 'ADMIN'
+  const onShop = pathname === '/' || pathname === '/collection'
 
-  useEffect(() => { setMenuOpen(false); setSearchOpen(false) }, [pathname])
-  useEffect(() => { if (searchOpen) searchRef.current?.focus() }, [searchOpen])
+  useEffect(() => { setMenuOpen(false) }, [pathname, params])
   useEffect(() => {
     document.body.style.overflow = menuOpen ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
@@ -38,104 +45,100 @@ export default function Header({ announcement }) {
   function submitSearch(e) {
     e.preventDefault()
     const q = query.trim()
-    if (!q) return
-    setSearchOpen(false)
-    router.push(`/collection?q=${encodeURIComponent(q)}`)
+    router.push(q ? `/?q=${encodeURIComponent(q)}` : '/')
   }
 
-  const iconBtn = 'inline-flex h-11 w-11 items-center justify-center text-ink transition-colors duration-short hover:text-accent'
+  const icon = 'relative inline-flex h-11 min-w-11 items-center justify-center gap-2 px-2 text-ink transition-colors duration-short hover:text-accent'
+  const badge = 'absolute right-0.5 top-1 min-w-[18px] bg-accent px-1 text-center text-xs font-semibold leading-[18px] text-accent-ink'
+
+  const searchForm = (id) => (
+    <form onSubmit={submitSearch} role="search" className="relative w-full">
+      <label htmlFor={id} className="sr-only">Rechercher un article</label>
+      <input
+        id={id}
+        type="search"
+        name="q"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="Rechercher une robe, une jupe, une couleur…"
+        className="field min-h-11 bg-paper-2 py-2 pl-11 pr-4"
+      />
+      <Search size={18} strokeWidth={1.5} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted" aria-hidden="true" />
+    </form>
+  )
 
   return (
     <>
-      {announcement && (
-        <p className="truncate bg-ink px-gutter py-2 text-center text-sm text-paper">{announcement}</p>
-      )}
+      {announcement && <p className="truncate bg-accent px-gutter py-1.5 text-center text-sm text-accent-ink">{announcement}</p>}
 
-      <header className="sticky top-0 z-nav border-b-2 border-rule-ink bg-paper">
-        <div className="shop-container flex h-[72px] items-center justify-between gap-2 sm:gap-6">
-          <div className="flex items-center gap-1">
-            <button type="button" onClick={() => setMenuOpen(true)} className={cn(iconBtn, '-ml-3 lg:hidden')} aria-label="Ouvrir le menu">
-              <Menu size={22} strokeWidth={1.5} />
-            </button>
-            <Logo />
-          </div>
-
-          <nav aria-label="Navigation principale" className="flex items-center gap-1">
-            <ul className="mr-4 hidden items-center gap-7 lg:flex">
-              {NAV.map((l) => (
-                <li key={l.href}>
-                  <Link href={l.href} className="link-underline py-1 font-medium">{l.label}</Link>
-                </li>
-              ))}
-              {isAdmin && <li><Link href="/gestion" className="link-underline py-1 font-medium text-accent">Gestion</Link></li>}
-            </ul>
-            <button type="button" onClick={() => setSearchOpen(true)} className={cn(iconBtn, 'max-[359px]:hidden')} aria-label="Rechercher">
-              <Search size={20} strokeWidth={1.5} />
-            </button>
-            <Link href={session ? '/compte' : '/connexion'} className={cn(iconBtn, 'hidden sm:inline-flex')} aria-label="Mon compte">
-              <User size={20} strokeWidth={1.5} />
+      <header className="sticky top-0 z-nav border-b border-rule bg-paper">
+        <div className="shop-container flex h-16 items-center gap-3 lg:gap-8">
+          <button type="button" onClick={() => setMenuOpen(true)} className={cn(icon, '-ml-2 lg:hidden')} aria-label="Ouvrir le menu">
+            <Menu size={22} strokeWidth={1.5} />
+          </button>
+          <Logo />
+          <div className="hidden max-w-xl flex-1 md:block">{searchForm('search-desktop')}</div>
+          <nav aria-label="Mon espace" className="ml-auto flex items-center">
+            <Link href="/boutique" className={cn(icon, 'hidden xl:inline-flex')}><Store size={20} strokeWidth={1.5} aria-hidden="true" /><span className="text-sm font-medium">Notre boutique</span></Link>
+            {isAdmin && <Link href="/gestion" className="mr-2 hidden min-h-9 items-center bg-ink px-3 text-sm font-medium text-paper sm:inline-flex">Gestion</Link>}
+            <Link href={session ? '/compte' : '/connexion'} className={icon} aria-label="Mon compte">
+              <User size={20} strokeWidth={1.5} aria-hidden="true" /><span className="hidden text-sm font-medium lg:inline">{session ? 'Mon compte' : 'Connexion'}</span>
             </Link>
-            <Link href="/favoris" className={cn(iconBtn, 'relative')} aria-label={`Mes favoris${wishCount ? ` (${wishCount})` : ''}`}>
-              <Heart size={20} strokeWidth={1.5} />
-              {wishCount > 0 && <span className="absolute right-1 top-1 min-w-[18px] bg-ink px-1 text-center text-xs leading-[18px] text-paper">{wishCount}</span>}
+            <Link href="/favoris" className={icon} aria-label={`Favoris${wishCount ? `, ${wishCount}` : ''}`}>
+              <Heart size={20} strokeWidth={1.5} aria-hidden="true" />
+              {wishCount > 0 && <span className={badge}>{wishCount}</span>}
             </Link>
-            <button type="button" onClick={openCart} className="btn-primary ml-1 min-h-[44px] px-3 sm:ml-2 sm:px-4" aria-label={`Ouvrir le panier${ready && itemCount ? `, ${itemCount} article${itemCount > 1 ? 's' : ''}` : ''}`}>
-              <ShoppingBag size={18} strokeWidth={1.5} className="sm:hidden" aria-hidden="true" />
-              <span className="max-sm:sr-only">Panier</span>
-              {ready && itemCount > 0 ? <span className="tabular-nums">{itemCount}</span> : null}
+            <button type="button" onClick={openCart} className={cn(icon, '-mr-2')} aria-label={`Panier${ready && itemCount ? `, ${itemCount} article${itemCount > 1 ? 's' : ''}` : ''}`}>
+              <ShoppingBag size={20} strokeWidth={1.5} aria-hidden="true" /><span className="hidden text-sm font-medium lg:inline">Panier</span>
+              {ready && itemCount > 0 && <span className={badge}>{itemCount}</span>}
             </button>
           </nav>
         </div>
+
+        <div className="shop-container pb-3 md:hidden">{searchForm('search-mobile')}</div>
+
+        <nav aria-label="Catégories" className="border-t border-rule">
+          <ul className="no-scrollbar shop-container flex gap-6 overflow-x-auto">
+            {CATS.map((c) => {
+              const on = onShop && c.match(params)
+              return (
+                <li key={c.href}>
+                  <Link
+                    href={c.href}
+                    aria-current={on ? 'page' : undefined}
+                    className={cn('inline-flex h-11 items-center whitespace-nowrap border-b-2 text-sm font-medium transition-colors duration-short',
+                      on ? 'border-accent text-ink' : 'border-transparent text-ink-2 hover:border-ink hover:text-ink',
+                      c.accent && 'text-accent')}
+                  >
+                    {c.label}
+                  </Link>
+                </li>
+              )
+            })}
+          </ul>
+        </nav>
       </header>
 
-      {searchOpen && (
-        <div className="fixed inset-0 z-modal animate-fade bg-ink/40 motion-reduce:animate-none" onClick={() => setSearchOpen(false)}>
-          <div className="border-b-2 border-rule-ink bg-paper" onClick={(e) => e.stopPropagation()}>
-            <form onSubmit={submitSearch} role="search" className="shop-container flex min-h-24 items-center gap-4 py-4">
-              <label htmlFor="site-search" className="visually-hidden">Rechercher dans la boutique</label>
-              <Search size={22} strokeWidth={1.5} className="shrink-0 text-muted" aria-hidden="true" />
-              <input
-                id="site-search"
-                ref={searchRef}
-                type="search"
-                name="q"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Une robe, une jupe, une couleur…"
-                className="display min-w-0 flex-1 bg-transparent text-[2rem] text-ink outline-none placeholder:text-muted focus-visible:outline-none"
-              />
-              <button type="button" onClick={() => setSearchOpen(false)} className={iconBtn} aria-label="Fermer la recherche">
-                <X size={22} strokeWidth={1.5} />
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
-
       {menuOpen && (
-        <div className="fixed inset-0 z-modal lg:hidden">
+        <div className="fixed inset-0 z-modal lg:hidden" role="dialog" aria-modal="true" aria-label="Menu">
           <div className="absolute inset-0 animate-fade bg-ink/40 motion-reduce:animate-none" onClick={() => setMenuOpen(false)} />
-          <div className="absolute inset-y-0 left-0 flex w-[88%] max-w-sm animate-slide-in-left flex-col bg-paper motion-reduce:animate-none">
-            <div className="flex h-[72px] items-center justify-between border-b-2 border-rule-ink px-6">
+          <div className="absolute inset-y-0 left-0 flex w-[86%] max-w-sm animate-slide-in-left flex-col bg-paper motion-reduce:animate-none">
+            <div className="flex h-16 items-center justify-between border-b border-rule px-5">
               <Logo />
-              <button type="button" onClick={() => setMenuOpen(false)} className={cn(iconBtn, '-mr-3')} aria-label="Fermer le menu"><X size={22} strokeWidth={1.5} /></button>
+              <button type="button" onClick={() => setMenuOpen(false)} className={cn(icon, '-mr-2')} aria-label="Fermer le menu"><X size={22} strokeWidth={1.5} /></button>
             </div>
-            <nav aria-label="Menu" className="flex-1 overflow-y-auto px-6 py-6">
-              <ul className="divide-y divide-rule border-b border-rule">
-                {NAV.map((l) => (
-                  <li key={l.href}><Link href={l.href} className="display block py-4 text-[2rem]">{l.label}</Link></li>
+            <nav aria-label="Menu" className="flex-1 overflow-y-auto">
+              <ul className="divide-y divide-rule">
+                <li><Link href="/" className="flex min-h-12 items-center px-5 font-semibold">Toute la boutique</Link></li>
+                {CATS.map((c) => (
+                  <li key={c.href}><Link href={c.href} className={cn('flex min-h-12 items-center px-5', c.accent && 'text-accent')}>{c.label}</Link></li>
                 ))}
-                <li><Link href="/collection?promo=1" className="display block py-4 text-[2rem] text-accent">Promotions</Link></li>
-              </ul>
-              <ul className="mt-6 grid grid-cols-2 gap-x-4 gap-y-3">
-                {CATEGORIES.map((c) => (
-                  <li key={c.id}><Link href={`/collection?categorie=${c.id}`} className="link-underline">{c.label}</Link></li>
-                ))}
+                <li><Link href="/boutique" className="flex min-h-12 items-center px-5">Notre boutique à Kourou</Link></li>
               </ul>
             </nav>
-            <div className="space-y-3 border-t border-rule px-6 py-6">
+            <div className="space-y-2 border-t border-rule p-5">
               {isAdmin && <Link href="/gestion" className="btn-primary w-full">Gérer la boutique</Link>}
-              <Link href={session ? '/compte' : '/connexion'} className="btn-outline w-full"><User size={18} strokeWidth={1.5} /> {session ? 'Mon compte' : 'Se connecter'}</Link>
+              <Link href={session ? '/compte' : '/connexion'} className="btn-outline w-full">{session ? 'Mon compte' : 'Se connecter'}</Link>
             </div>
           </div>
         </div>

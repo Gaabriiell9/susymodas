@@ -64,7 +64,7 @@ export default function CheckoutClient({ user }) {
     return (
       <div className="shop-container py-28 text-center">
         <h1 className="display text-4xl">Votre panier est vide</h1>
-        <Link href="/collection" className="btn-dark mt-8">Découvrir la collection</Link>
+        <Link href="/" className="btn-dark mt-8">Découvrir la collection</Link>
       </div>
     )
   }
@@ -73,7 +73,7 @@ export default function CheckoutClient({ user }) {
 
   return (
     <div className="shop-container py-10 lg:py-14">
-      <Link href="/collection" className="label inline-flex items-center gap-2 text-ink-muted hover:text-ink"><ArrowLeft size={14} /> Continuer mes achats</Link>
+      <Link href="/" className="label inline-flex items-center gap-2 text-ink-muted hover:text-ink"><ArrowLeft size={14} /> Continuer mes achats</Link>
       <h1 className="display mt-4 text-4xl lg:text-5xl">Finaliser ma commande</h1>
 
       {cancelled && <p className="mt-6 border border-line bg-paper px-4 py-3 text-[14px]">Le paiement a été annulé. Votre panier est toujours là, vous pouvez réessayer.</p>}

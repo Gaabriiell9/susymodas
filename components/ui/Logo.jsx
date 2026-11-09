@@ -1,14 +1,9 @@
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 
-// Mot-symbole : Libre Caslon, casse normale, sans espacement
-export default function Logo({ className, size = 'md' }) {
+export default function Logo({ className }) {
   return (
-    <Link
-      href="/"
-      aria-label="Susy Modas, accueil"
-      className={cn('display whitespace-nowrap text-ink', size === 'lg' ? 'text-[2rem]' : 'text-[1.75rem] sm:text-[2rem]', className)}
-    >
+    <Link href="/" aria-label="Susy Modas, accueil de la boutique" className={cn('wordmark text-[1.625rem] text-ink sm:text-[1.875rem]', className)}>
       Susy Modas
     </Link>
   )

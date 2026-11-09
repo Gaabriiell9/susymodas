@@ -57,8 +57,8 @@ export default function AuthForm({ google }) {
   return (
     <div className="grid w-full gap-12 lg:grid-cols-12 lg:gap-8">
       <div className="lg:col-span-5">
-        <h1 className="text-display-s">{mode === 'verify' ? 'Confirmez votre e-mail' : mode === 'register' ? 'Créer un compte' : 'Bon retour'}</h1>
-        <p className="lead mt-6 text-muted">
+        <h1 >{mode === 'verify' ? 'Confirmez votre e-mail' : mode === 'register' ? 'Créer un compte' : 'Bon retour'}</h1>
+        <p className="mt-3 text-muted">
           {mode === 'verify' ? info : 'Suivez vos commandes et retrouvez vos favoris sur tous vos appareils.'}
         </p>
       </div>

@@ -30,7 +30,7 @@ function Success() {
   if (error) {
     return (
       <div className="shop-container py-28 text-center">
-        <h1 className="text-display-s">Impossible d&apos;afficher la commande</h1>
+        <h1 >Impossible d&apos;afficher la commande</h1>
         <p className="mt-3 text-ink-muted">{error}</p>
         <Link href="/" className="btn-dark mt-8">Retour à l&apos;accueil</Link>
       </div>
@@ -43,7 +43,7 @@ function Success() {
     <div className="shop-container max-w-2xl py-16 lg:py-24">
       <div className="text-center">
         <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-ink text-ivory"><Check size={24} /></span>
-        <h1 className="mt-6 text-display-s">Merci {order.firstName} !</h1>
+        <h1 className="mt-6">Merci {order.firstName} !</h1>
         <p className="mt-4 text-ink-soft">Votre paiement est confirmé pour la commande {order.reference}. Un récapitulatif a été envoyé à {order.email}.</p>
       </div>
 
@@ -72,7 +72,7 @@ function Success() {
         </dl>
       </div>
       <div className="mt-10 flex justify-center gap-3">
-        <Link href="/collection" className="btn-dark">Continuer mes achats</Link>
+        <Link href="/" className="btn-dark">Continuer mes achats</Link>
         <Link href="/compte" className="btn-outline">Mes commandes</Link>
       </div>
     </div>

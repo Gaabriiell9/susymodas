@@ -1,14 +1,3 @@
-/* Hallmark · shape: Catalogue (swapped from Conversational FAQ: the words are kept) · genre: editorial · theme: Loom (deal 1/3, seed online-clothing-boutique-modest-c239·29700d09·2026-11-01·r0) · redesign: full
- * hero: Stage (/), Banner (/collection), Banner (/boutique), Counter (/produit) · nav: edge-aligned · footer: mast · imagery: photographs (the user's dress photograph, product photos from the shop) · signature: the yellow dress full length beside the head, and the click and collect sheet as ruled pattern-book rows · loom: ecru, brand rose replaces indigo
- * axes: light/roman-serif/warm · posture: committed · contrast: pass · fold: pass · job: buy · draw: 99b9ca · v2.0.0 */
-/* Hallmark · pre-emit critique: P4 H4 E4 S4 R5 V4 · weakest: S and P, a dress shop could be any shop; led with the owner's own photograph and Proverbs 31:25, and set the click and collect terms as a sheet only a Kourou boutique would print */
-/* Hallmark · dropped onClick={() => setMegaOpen((v) => !v)}, onMouseEnter={() => setMegaOpen(false)}, onMouseEnter={() => setMegaOpen(true)}, onMouseLeave={() => setMegaOpen(false)} · the mega menu is retired for an edge-aligned nav, and every category it listed stays linked from the footer, the collection tabs and the mobile menu */
-/* Hallmark · reworded "L'éléganceen toute pudeur" to "L'élégance en toute pudeur" · 38i names the italic phrase, the same words now set in roman */
-/* Hallmark · waive 59 · a dense catalogue parted by a ruled tab row, a sticky filter bar and the grid · the collection page sorts and filters the catalogue, so rules and paper part it instead of section gaps */
-/* Hallmark · waive 44c · a catalogue title band and a buy box, no hero visual · the collection page opens on its title band and the product page on the buy box beside the gallery */
-/* Hallmark · waive 3 · product cards whose one icon is the favourites toggle · the related dresses under each product are cards with photos and prices, not icon tiles */
-/* Hallmark · waive 85 · the page closes on the sign-in form, whose button opens the customer account · the connexion page is where a customer signs in to follow orders, not a mailing list */
-/* Hallmark · waive 77 · an empty favourites list, one line and one action · the favoris page is empty until a customer taps the heart on a dress, then it fills with product cards */
 @import "./tokens.css";
 
 @tailwind base;
@@ -46,9 +35,13 @@
   [data-slot] > img { filter: saturate(0.88) contrast(0.96); }
 }
 
+/* Présentation « boutique en ligne » : titres en Hanken demi-gras, compacts ; Caslon réservé au logo */
 @layer base {
   html { -webkit-tap-highlight-color: transparent; }
-  h1, h2 { font-weight: 400; line-height: 1.04; }
+  h1, h2, h3 { font-family: var(--font-body); font-weight: 600; letter-spacing: -0.01em; line-height: 1.2; max-width: none; text-wrap: balance; }
+  h1 { font-size: clamp(1.5rem, 1vw + 1.1rem, 2rem); }
+  h2 { font-size: clamp(1.25rem, 0.6vw + 1rem, 1.5rem); }
+  h3 { font-size: var(--text-md); font-weight: 500; }
   input, select, textarea { font-size: max(16px, var(--text-sm)); }
   button { cursor: pointer; }
   button:disabled { cursor: not-allowed; }
@@ -109,7 +102,8 @@
 
   .photo { outline: 1px solid color-mix(in oklab, var(--color-ink) 8%, transparent); outline-offset: -1px; }
   .rule-ink { border-top: var(--rule-ink) solid var(--color-rule-ink); }
-  .display { font-family: var(--font-display); font-weight: 400; letter-spacing: var(--tracking-display); line-height: 1.04; overflow-wrap: break-word; min-width: 0; }
+  .display { font-family: var(--font-body); font-weight: 600; letter-spacing: -0.01em; line-height: 1.15; overflow-wrap: break-word; min-width: 0; }
+  .wordmark { font-family: var(--font-display); font-weight: 400; letter-spacing: 0; line-height: 1; white-space: nowrap; }
   .chip { display: inline-flex; align-items: center; min-height: 28px; padding: var(--space-2xs) var(--space-xs); font-size: var(--text-sm); font-weight: 500; background: var(--color-paper); color: var(--color-ink); }
   .chip-accent { background: var(--color-accent); color: var(--color-accent-ink); }
 }
